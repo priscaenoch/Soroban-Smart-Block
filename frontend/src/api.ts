@@ -39,29 +39,37 @@ async function get<T>(path: string): Promise<T> {
   return res.json();
 }
 
+export interface SimResult {
+  success: boolean;
+  returnValue?: string;
+  cost?: { cpuInsns: string; memBytes: string };
+  error?: string;
+}
+
 export const api = {
-  events: (params: { contract?: string; fn?: string; page?: number }) => {
+  events: (params: { contract?: string; fn?: string; page?: number; type?: string }) => {
     const q = new URLSearchParams();
     if (params.contract) q.set("contract", params.contract);
     if (params.fn)       q.set("fn", params.fn);
     if (params.page)     q.set("page", String(params.page));
+    if (params.type)     q.set("type", params.type);
     return get<DecodedEvent[]>(`/events?${q}`);
   },
   event:    (seq: number)     => get<DecodedEvent>(`/events/${seq}`),
   contract: (id: string)      => get<ContractMeta>(`/contracts/${id}`),
   wallet:   (address: string) => get<DecodedEvent[]>(`/wallet/${address}`),
 
-  // Issue #38: contract transaction history with filters
-  contractTransactions: (
-    id: string,
-    params: { function_name?: string; start_ledger?: number; end_ledger?: number; page?: number; limit?: number } = {}
-  ) => {
-    const q = new URLSearchParams();
-    if (params.function_name) q.set("function_name", params.function_name);
-    if (params.start_ledger)  q.set("start_ledger",  String(params.start_ledger));
-    if (params.end_ledger)    q.set("end_ledger",     String(params.end_ledger));
-    if (params.page)          q.set("page",           String(params.page));
-    if (params.limit)         q.set("limit",          String(params.limit));
-    return get<ContractTransactionsResponse>(`/v1/contracts/${id}/transactions?${q}`);
+  downloadAbi: async (id: string) => {
+    const res = await fetch(`${BASE}/contracts/${id}/abi`);
+    if (!res.ok) throw new Error(`API ${res.status}: /contracts/${id}/abi`);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${id}.abi.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   },
 };
