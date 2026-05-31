@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import type { BurnAlert } from "../api";
@@ -10,6 +10,7 @@ import SourceFileTree from "../components/SourceFileTree";
 import SimulateButton from "../components/SimulateButton";
 import InvocationFlowChart, { type InvocationNode } from "../components/InvocationFlowChart";
 import PrivilegedRoles from "../components/PrivilegedRoles";
+import SdkSnippet from "../components/SdkSnippet";
 
 // Demo source shown when no verified source is uploaded
 const DEMO_SOURCE = `// Verified source not yet uploaded for this contract.
@@ -46,12 +47,13 @@ const DEMO_TREE: InvocationNode = {
   ],
 };
 
-type Tab = "overview" | "source" | "simulate" | "flow" | "roles";
+type Tab = "overview" | "source" | "simulate" | "flow" | "roles" | "networks" | "graph";
 
 export default function ContractPage() {
   const { id = "" } = useParams();
   const [tab, setTab] = useState<Tab>("overview");
   const [selectedFn, setSelectedFn] = useState("");
+  const [snippetFn, setSnippetFn] = useState<string | null>(null);
 
   const { data: meta, isLoading: metaLoading } = useQuery({
     queryKey: ["contract", id],
@@ -79,11 +81,13 @@ export default function ContractPage() {
   if (!meta) return <p>Contract not found.</p>;
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: "overview", label: "Overview" },
-    { key: "source",   label: "Source Code" },
-    { key: "simulate", label: "Simulate" },
-    { key: "flow",     label: "Invocation Flow" },
-    { key: "roles",    label: "Privileged Roles" },
+    { key: "overview",  label: "Overview" },
+    { key: "source",    label: "Source Code" },
+    { key: "simulate",  label: "Simulate" },
+    { key: "flow",      label: "Invocation Flow" },
+    { key: "roles",     label: "Privileged Roles" },
+    { key: "networks",  label: "Networks" },
+    { key: "graph",     label: "Address Graph" },
   ];
 
   return (
@@ -101,20 +105,37 @@ export default function ContractPage() {
             <p style={{ color: "var(--muted)", marginBottom: 12 }}>{meta.description}</p>
             <code style={{ fontSize: 12, color: "var(--muted)", wordBreak: "break-all" }}>{id}</code>
           </div>
-          <button
-            onClick={downloadAbi}
-            style={{
-              padding: "8px 16px",
-              background: "var(--accent)",
-              color: "#fff",
-              border: "none",
-              borderRadius: 4,
-              cursor: "pointer",
-              fontSize: 13,
-            }}
-          >
-            Download ABI
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <Link
+              to={`/contract/${id}/workspace`}
+              style={{
+                padding: "8px 16px",
+                background: "var(--surface, #1a1a2e)",
+                color: "var(--accent)",
+                border: "1px solid var(--accent)",
+                borderRadius: 4,
+                cursor: "pointer",
+                fontSize: 13,
+                textDecoration: "none",
+              }}
+            >
+              🛠 Dev Workspace
+            </Link>
+            <button
+              onClick={downloadAbi}
+              style={{
+                padding: "8px 16px",
+                background: "var(--accent)",
+                color: "#fff",
+                border: "none",
+                borderRadius: 4,
+                cursor: "pointer",
+                fontSize: 13,
+              }}
+            >
+              Download ABI
+            </button>
+          </div>
         </div>
 
       {/* Tab bar */}
@@ -158,11 +179,31 @@ export default function ContractPage() {
           {meta.functions.length > 0 && (
             <div className="card">
               <h3 style={{ marginBottom: 8, fontSize: 14 }}>Functions</h3>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {meta.functions.map(f => (
                   <div key={f.name} className="card" style={{ padding: "8px 12px" }}>
-                    <span className="badge">{f.name}</span>
-                    <span style={{ marginLeft: 8, color: "var(--muted)" }}>{f.description}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span className="badge">{f.name}</span>
+                      <span style={{ color: "var(--muted)", flex: 1 }}>{f.description}</span>
+                      {/* Issue #120: SDK snippet copy button */}
+                      <button
+                        onClick={() => setSnippetFn(snippetFn === f.name ? null : f.name)}
+                        style={{
+                          padding: "3px 10px",
+                          fontSize: 12,
+                          background: snippetFn === f.name ? "var(--accent, #7c3aed)" : "var(--bg2, #1e1e2e)",
+                          color: snippetFn === f.name ? "#fff" : "var(--muted)",
+                          border: "1px solid var(--border, #333)",
+                          borderRadius: 4,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {"</>"}  SDK
+                      </button>
+                    </div>
+                    {snippetFn === f.name && (
+                      <SdkSnippet contractId={id} fnName={f.name} />
+                    )}
                   </div>
                 ))}
               </div>
@@ -217,6 +258,12 @@ export default function ContractPage() {
 
       {/* Tab: Privileged Roles */}
       {tab === "roles" && <PrivilegedRoles contractId={id} />}
+
+      {/* Tab: Network Comparison — Issue #124 */}
+      {tab === "networks" && <NetworkComparison contractId={id} />}
+
+      {/* Tab: Address Connection Graph — Issue #126 */}
+      {tab === "graph" && <AddressConnectionGraph contractId={id} />}
     </div>
   );
 }

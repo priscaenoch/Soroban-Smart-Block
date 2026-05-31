@@ -103,42 +103,23 @@ export interface PrivilegedRole {
   updated_at: string;
 }
 
-// ── Full contract spec (functions + custom types) ──────────────────────────
-
-export interface SpecField {
-  name: string;
-  type: string;
+// Issue #117: sub-invocation record
+export interface SubInvocation {
+  id: number;
+  parent_tx_hash: string;
+  depth: number;
+  contract_id: string;
+  function: string;
+  args: unknown[] | null;
+  ledger: number;
 }
 
-export interface SpecCase {
-  name: string;
-  /** Numeric discriminant for enum/error_enum variants */
-  value?: number;
-  /** Payload types for union tuple variants */
-  types?: string[];
-}
-
-export interface SpecType {
-  kind: "struct" | "enum" | "union" | "error_enum";
-  name: string;
-  doc?: string;
-  /** Present for struct */
-  fields?: SpecField[];
-  /** Present for enum, union, error_enum */
-  cases?: SpecCase[];
-}
-
-export interface SpecFunction {
-  kind: "function";
-  name: string;
-  doc?: string;
-  inputs: SpecField[];
-  outputs: string[];
-}
-
-export interface FullSpec {
-  functions: SpecFunction[];
-  types: SpecType[];
+// Issue #118: transaction status
+export interface TxStatusResponse {
+  tx_hash: string;
+  status: "pending" | "success" | "failed";
+  ledger: number | null;
+  error?: string | null;
 }
 
 export const api = {
@@ -155,7 +136,17 @@ export const api = {
   migrationStatus: (id: string) => get<MigrationStatus>(`/contracts/${id}/migration-status`),
   wallet:   (address: string) => get<DecodedEvent[]>(`/wallet/${address}`),
   roles:    (id: string)      => get<PrivilegedRole[]>(`/contracts/${id}/roles`),
-  specFull: (id: string)      => get<FullSpec>(`/spec/${id}/full`),
+  networkComparison: (id: string) => get<NetworkComparisonResult>(`/contracts/${id}/network-comparison`),
+  addressGraph:      (id: string) => get<AddressGraphData>(`/contracts/${id}/address-graph`),
+
+  // Issue #117: sub-invocations for a transaction
+  subInvocations: (txHash: string) => get<SubInvocation[]>(`/transactions/${txHash}/sub-invocations`),
+  // Events where contract appears directly OR as sub-invocation
+  eventsDeep: (contractId: string, page = 1) =>
+    get<DecodedEvent[]>(`/v1/contracts/${contractId}/events-deep?page=${page}`),
+
+  // Issue #118: transaction status (polling fallback; SSE via useTxStatus hook)
+  txStatus: (txHash: string) => get<TxStatusResponse>(`/transactions/${txHash}/status`),
 
   downloadAbi: async (id: string) => {
     const res = await fetch(`${BASE}/contracts/${id}/abi`);
