@@ -55,6 +55,9 @@ export default function ContractPage() {
   const [selectedFn, setSelectedFn] = useState("");
   const [snippetFn, setSnippetFn] = useState<string | null>(null);
 
+  // ── Local ABI (session-only, never sent to server) ──────────────────────────
+  const { localAbi, loadAbi, clearAbi, parseError } = useLocalAbi(id);
+
   const { data: meta, isLoading: metaLoading } = useQuery({
     queryKey: ["contract", id],
     queryFn: () => api.contract(id),
@@ -83,8 +86,55 @@ export default function ContractPage() {
     api.downloadAbi(id).catch(err => console.error("Download ABI failed:", err));
   };
 
+  // A contract is considered "unverified" when the server has no registered
+  // metadata for it (meta is null/404) or it has no functions defined.
+  const isUnverified = !meta || meta.functions.length === 0;
+
   if (metaLoading) return <p style={{ color: "var(--muted)" }}>Loading…</p>;
-  if (!meta) return <p>Contract not found.</p>;
+  if (!meta) {
+    // Contract not in the registry — show the upload zone as the primary UI
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div className="card">
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <span
+              style={{
+                display: "inline-block",
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: "var(--yellow)",
+                flexShrink: 0,
+              }}
+            />
+            <h2 style={{ fontSize: 16 }}>Unverified Contract</h2>
+            <code style={{ fontSize: 12, color: "var(--muted)", wordBreak: "break-all" }}>{id}</code>
+          </div>
+          <p style={{ color: "var(--muted)", fontSize: 13, marginBottom: 16 }}>
+            This contract has no registered ABI. Upload a local spec file to inspect
+            its transaction logs — the file stays in your browser session only.
+          </p>
+          <AbiUploadZone
+            onLoad={loadAbi}
+            onClear={clearAbi}
+            localAbi={localAbi}
+            parseError={parseError}
+          />
+        </div>
+
+        {localAbi && (
+          <div className="card">
+            <h3 style={{ fontSize: 14, marginBottom: 12 }}>Recent Events</h3>
+            {evLoading ? (
+              <p style={{ color: "var(--muted)" }}>Loading…</p>
+            ) : (
+              <LocalAbiEventTable events={events} localAbi={localAbi} />
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "overview",  label: "Overview" },
@@ -188,21 +238,85 @@ export default function ContractPage() {
       {/* Tab: Overview */}
       {tab === "overview" && (
         <>
-          {burnAlerts.length > 0 && (
-            <div className="card" style={{ borderLeft: "4px solid #f59e0b", background: "rgba(245,158,11,0.08)", padding: "12px 16px" }}>
-              <strong style={{ color: "#f59e0b" }}>⚠ Suspicious Burn Activity Detected</strong>
-              <p style={{ color: "var(--muted)", margin: "6px 0 0", fontSize: 13 }}>
-                Atypical supply contraction patterns were flagged for this token. The following ledgers show unusually high burn volumes:
-              </p>
-              <ul style={{ margin: "8px 0 0", paddingLeft: 20, fontSize: 13 }}>
-                {burnAlerts.map((a: BurnAlert) => (
-                  <li key={`${a.ledger}-${a.burnedPct}`} style={{ marginBottom: 4 }}>
-                    Ledger <strong>{a.ledger.toLocaleString()}</strong> — {a.burnedPct.toFixed(2)}% of estimated supply burned ({a.burnedAmount} raw units)
-                  </li>
-                ))}
-              </ul>
+          {/* Local ABI upload zone — shown for unverified contracts or when
+              the user wants to override descriptions with a local file */}
+          {isUnverified && (
+            <div className="card">
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: 7,
+                    height: 7,
+                    borderRadius: "50%",
+                    background: "var(--yellow)",
+                    flexShrink: 0,
+                  }}
+                />
+                <h3 style={{ fontSize: 13, color: "var(--yellow)" }}>
+                  No registered ABI — upload a local spec to decode events
+                </h3>
+              </div>
+              <AbiUploadZone
+                onLoad={loadAbi}
+                onClear={clearAbi}
+                localAbi={localAbi}
+                parseError={parseError}
+              />
             </div>
           )}
+
+          {/* Collapsible local ABI override for verified contracts */}
+          {!isUnverified && (
+            <details
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                borderRadius: 8,
+                padding: "10px 16px",
+              }}
+            >
+              <summary
+                style={{
+                  cursor: "pointer",
+                  fontSize: 13,
+                  color: localAbi ? "var(--green)" : "var(--muted)",
+                  userSelect: "none",
+                  listStyle: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                {localAbi ? (
+                  <>
+                    <span
+                      style={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: "50%",
+                        background: "var(--green)",
+                        display: "inline-block",
+                        flexShrink: 0,
+                      }}
+                    />
+                    Local ABI active — {localAbi.fileName}
+                  </>
+                ) : (
+                  <>▶ Override event descriptions with a local ABI file</>
+                )}
+              </summary>
+              <div style={{ marginTop: 12 }}>
+                <AbiUploadZone
+                  onLoad={loadAbi}
+                  onClear={clearAbi}
+                  localAbi={localAbi}
+                  parseError={parseError}
+                />
+              </div>
+            </details>
+          )}
+
           {meta.functions.length > 0 && (
             <div className="card">
               <h3 style={{ marginBottom: 8, fontSize: 14 }}>Functions</h3>
@@ -236,9 +350,17 @@ export default function ContractPage() {
               </div>
             </div>
           )}
+
           <h3>Recent Events</h3>
           <div className="card">
-            {evLoading ? <p style={{ color: "var(--muted)" }}>Loading…</p> : <EventTable events={events} />}
+            {evLoading ? (
+              <p style={{ color: "var(--muted)" }}>Loading…</p>
+            ) : localAbi ? (
+              // Re-render with local ABI descriptions
+              <LocalAbiEventTable events={events} localAbi={localAbi} />
+            ) : (
+              <EventTable events={events} />
+            )}
           </div>
         </>
       )}
