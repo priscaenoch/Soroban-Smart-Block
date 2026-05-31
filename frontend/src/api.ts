@@ -103,6 +103,25 @@ export interface PrivilegedRole {
   updated_at: string;
 }
 
+// Issue #117: sub-invocation record
+export interface SubInvocation {
+  id: number;
+  parent_tx_hash: string;
+  depth: number;
+  contract_id: string;
+  function: string;
+  args: unknown[] | null;
+  ledger: number;
+}
+
+// Issue #118: transaction status
+export interface TxStatusResponse {
+  tx_hash: string;
+  status: "pending" | "success" | "failed";
+  ledger: number | null;
+  error?: string | null;
+}
+
 export const api = {
   events: (params: { contract?: string; fn?: string; page?: number; type?: string }) => {
     const q = new URLSearchParams();
@@ -117,6 +136,15 @@ export const api = {
   migrationStatus: (id: string) => get<MigrationStatus>(`/contracts/${id}/migration-status`),
   wallet:   (address: string) => get<DecodedEvent[]>(`/wallet/${address}`),
   roles:    (id: string)      => get<PrivilegedRole[]>(`/contracts/${id}/roles`),
+
+  // Issue #117: sub-invocations for a transaction
+  subInvocations: (txHash: string) => get<SubInvocation[]>(`/transactions/${txHash}/sub-invocations`),
+  // Events where contract appears directly OR as sub-invocation
+  eventsDeep: (contractId: string, page = 1) =>
+    get<DecodedEvent[]>(`/v1/contracts/${contractId}/events-deep?page=${page}`),
+
+  // Issue #118: transaction status (polling fallback; SSE via useTxStatus hook)
+  txStatus: (txHash: string) => get<TxStatusResponse>(`/transactions/${txHash}/status`),
 
   downloadAbi: async (id: string) => {
     const res = await fetch(`${BASE}/contracts/${id}/abi`);

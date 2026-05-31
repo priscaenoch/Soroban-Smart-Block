@@ -5,6 +5,7 @@ import ContractPage from "./pages/ContractPage";
 import WalletPage from "./pages/WalletPage";
 import EventPage from "./pages/EventPage";
 import XdrInspector from "./pages/XdrInspector";
+import BatchCallBuilder from "./pages/BatchCallBuilder";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
           <Route path="/wallet/:address" element={<WalletPage />} />
           <Route path="/event/:seq" element={<EventPage />} />
           <Route path="/xdr" element={<XdrInspector />} />
+          <Route path="/batch" element={<BatchCallBuilder />} />
         </Routes>
       </main>
     </>

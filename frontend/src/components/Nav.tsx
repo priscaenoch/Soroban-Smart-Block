@@ -30,6 +30,9 @@ export default function Nav() {
       <Link to="/xdr" style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}>
         XDR Inspector
       </Link>
+      <Link to="/batch" style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}>
+        Batch Builder
+      </Link>
       <form onSubmit={search} style={{ display: "flex", gap: 8, flex: 1, maxWidth: 600 }}>
         <input
           value={q}

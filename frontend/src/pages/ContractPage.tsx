@@ -10,6 +10,7 @@ import SourceFileTree from "../components/SourceFileTree";
 import SimulateButton from "../components/SimulateButton";
 import InvocationFlowChart, { type InvocationNode } from "../components/InvocationFlowChart";
 import PrivilegedRoles from "../components/PrivilegedRoles";
+import SdkSnippet from "../components/SdkSnippet";
 
 // Demo source shown when no verified source is uploaded
 const DEMO_SOURCE = `// Verified source not yet uploaded for this contract.
@@ -52,6 +53,7 @@ export default function ContractPage() {
   const { id = "" } = useParams();
   const [tab, setTab] = useState<Tab>("overview");
   const [selectedFn, setSelectedFn] = useState("");
+  const [snippetFn, setSnippetFn] = useState<string | null>(null);
 
   const { data: meta, isLoading: metaLoading } = useQuery({
     queryKey: ["contract", id],
@@ -158,11 +160,31 @@ export default function ContractPage() {
           {meta.functions.length > 0 && (
             <div className="card">
               <h3 style={{ marginBottom: 8, fontSize: 14 }}>Functions</h3>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {meta.functions.map(f => (
                   <div key={f.name} className="card" style={{ padding: "8px 12px" }}>
-                    <span className="badge">{f.name}</span>
-                    <span style={{ marginLeft: 8, color: "var(--muted)" }}>{f.description}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span className="badge">{f.name}</span>
+                      <span style={{ color: "var(--muted)", flex: 1 }}>{f.description}</span>
+                      {/* Issue #120: SDK snippet copy button */}
+                      <button
+                        onClick={() => setSnippetFn(snippetFn === f.name ? null : f.name)}
+                        style={{
+                          padding: "3px 10px",
+                          fontSize: 12,
+                          background: snippetFn === f.name ? "var(--accent, #7c3aed)" : "var(--bg2, #1e1e2e)",
+                          color: snippetFn === f.name ? "#fff" : "var(--muted)",
+                          border: "1px solid var(--border, #333)",
+                          borderRadius: 4,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {"</>"}  SDK
+                      </button>
+                    </div>
+                    {snippetFn === f.name && (
+                      <SdkSnippet contractId={id} fnName={f.name} />
+                    )}
                   </div>
                 ))}
               </div>
