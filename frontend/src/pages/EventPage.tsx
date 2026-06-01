@@ -6,6 +6,7 @@ import StorageTierBreakdown from "../components/StorageTierBreakdown";
 import FiatValue from "../components/FiatValue";
 import GasLimitAlert from "../components/GasLimitAlert";
 import FeeSponsorBanner from "../components/FeeSponsorBanner";
+import RestoreFootprintPanel from "../components/RestoreFootprintPanel";
 
 /** Parse amount and symbol from a transfer description. */
 function parseTransfer(description: string): { amount: number; symbol: string } | null {
@@ -98,6 +99,11 @@ export default function EventPage() {
 
       {/* Issue #52 — Storage tier breakdown */}
       {ev.storage_tiers && <StorageTierBreakdown tiers={ev.storage_tiers} />}
+
+      {/* Issue #167 — State restoration (RestoreFootprintOp) */}
+      {ev.archival_info?.isRestoreOp && (
+        <RestoreFootprintPanel restore={ev.archival_info} />
+      )}
     </div>
   );
 }

@@ -76,6 +76,20 @@ export interface DecodedEvent {
   };
   // Issue #169: fee-bump chain of custody
   fee_bump?: FeeBumpInfo | null;
+  // Issue #167: state archival / restoration info (RestoreFootprintOp)
+  archival_info?: {
+    isRestoreOp: boolean;
+    revivedKeys: {
+      type: string;
+      label: string;
+      contractId?: string;
+      wasmHash?: string;
+      dataKey?: string;
+      durability?: string;
+    }[];
+    keyCount: number;
+    feePaid: number | null;
+  } | null;
 }
 
 export interface SourceFile {
