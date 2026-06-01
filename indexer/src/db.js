@@ -46,6 +46,13 @@ export const db = {
         description TEXT,
         functions   JSONB,
         registered_by TEXT,
+        -- Issue #86: Circuit breaker status tracking
+        has_circuit_breaker BOOLEAN DEFAULT FALSE,
+        is_paused   BOOLEAN DEFAULT FALSE,
+        pause_status_ledger BIGINT,
+        -- Issue #81: RWA token metadata
+        is_rwa      BOOLEAN DEFAULT FALSE,
+        rwa_type    TEXT,
         created_at  TIMESTAMPTZ DEFAULT NOW()
       );
 
@@ -318,14 +325,33 @@ export const db = {
 
   async upsertContractMeta(meta) {
     await pool.query(
-      `INSERT INTO contracts (id, name, description, functions, registered_by, source_files)
-       VALUES ($1,$2,$3,$4,$5,$6)
-       ON CONFLICT (id) DO UPDATE SET name=$2, description=$3, functions=$4, source_files=$6`,
+      `INSERT INTO contracts (id, name, description, functions, registered_by, source_files, has_circuit_breaker, is_rwa, rwa_type)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       ON CONFLICT (id) DO UPDATE SET name=$2, description=$3, functions=$4, source_files=$6, has_circuit_breaker=$7, is_rwa=$8, rwa_type=$9`,
       [
         meta.id, meta.name, meta.description, JSON.stringify(meta.functions), meta.registered_by,
         meta.source_files ? JSON.stringify(meta.source_files) : null,
+        meta.has_circuit_breaker ?? false,
+        meta.is_rwa ?? false,
+        meta.rwa_type ?? null,
       ]
     );
+  },
+
+  // Issue #86: Circuit breaker status tracking
+  async updateCircuitBreakerStatus(contractId, isPaused, ledger) {
+    await pool.query(
+      `UPDATE contracts SET is_paused = $1, pause_status_ledger = $2 WHERE id = $3`,
+      [isPaused, ledger, contractId]
+    );
+  },
+
+  async getCircuitBreakerStatus(contractId) {
+    const { rows } = await pool.query(
+      `SELECT has_circuit_breaker, is_paused, pause_status_ledger FROM contracts WHERE id = $1`,
+      [contractId]
+    );
+    return rows[0] ?? { has_circuit_breaker: false, is_paused: false, pause_status_ledger: null };
   },
 
   async getMigrationStatus(contractId) {

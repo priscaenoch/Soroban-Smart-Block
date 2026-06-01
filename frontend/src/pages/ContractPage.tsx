@@ -160,6 +160,12 @@ export default function ContractPage() {
         <MigrationBanner upgradedAtLedger={migrationStatus.upgradedAtLedger} />
       )}
 
+      {/* Issue #86: Circuit breaker status banner */}
+      <CircuitBreakerStatus contractId={id} />
+
+      {/* Issue #81: RWA metadata display */}
+      <RwaMetadataDisplay contractId={id} />
+
       {/* Header */}
       <div className="card">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>

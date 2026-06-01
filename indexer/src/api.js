@@ -268,6 +268,30 @@ export function startApi() {
     } catch (e) { res.status(500).json({ error: e.message }); }
   });
 
+  // ── Issue #86: Circuit breaker status endpoint ──────────────────────────────
+  // GET /api/contracts/:id/circuit-breaker — detect and return pause status
+  app.get("/api/contracts/:id/circuit-breaker", async (req, res) => {
+    try {
+      const status = await db.getCircuitBreakerStatus(req.params.id);
+      res.json(status);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  // ── Issue #81: RWA token activity endpoint ──────────────────────────────────
+  // GET /api/contracts/:id/rwa-metadata — get RWA-specific metadata
+  app.get("/api/contracts/:id/rwa-metadata", async (req, res) => {
+    try {
+      const meta = await db.getContractMeta(req.params.id);
+      if (!meta) return res.status(404).json({ error: "Not found" });
+      
+      const rwaInfo = {
+        is_rwa: meta.is_rwa ?? false,
+        rwa_type: meta.rwa_type ?? null,
+      };
+      res.json(rwaInfo);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
   // ── POST /api/auth-tree — parse multi-sig ContractAuth trees ───────────────
   // Body: { auth: string[] }  — array of base64 SorobanAuthorizationEntry XDRs
   // Returns: ordered array of { signer, invocations: [{ depth, scope }] }

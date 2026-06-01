@@ -166,6 +166,17 @@ export interface TxStatusResponse {
   error?: string | null;
 }
 
+export interface CircuitBreakerStatus {
+  has_circuit_breaker: boolean;
+  is_paused: boolean;
+  pause_status_ledger: number | null;
+}
+
+export interface RwaMetadata {
+  is_rwa: boolean;
+  rwa_type: string | null;
+}
+
 export const api = {
   events: (params: { contract?: string; fn?: string; page?: number; type?: string }) => {
     const q = new URLSearchParams();
@@ -192,6 +203,12 @@ export const api = {
 
   // Issue #118: transaction status (polling fallback; SSE via useTxStatus hook)
   txStatus: (txHash: string) => get<TxStatusResponse>(`/transactions/${txHash}/status`),
+
+  // Issue #86: Circuit breaker status
+  circuitBreakerStatus: (id: string) => get<CircuitBreakerStatus>(`/contracts/${id}/circuit-breaker`),
+
+  // Issue #81: RWA token metadata
+  rwaMetadata: (id: string) => get<RwaMetadata>(`/contracts/${id}/rwa-metadata`),
 
   downloadAbi: async (id: string) => {
     const res = await fetch(`${BASE}/contracts/${id}/abi`);

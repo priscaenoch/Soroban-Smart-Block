@@ -76,6 +76,15 @@ async function indexLedger(ledger) {
 
       publish(decoded);           // Issue #39 — push to WS clients
       handleVaultEvent(decoded);  // vault ratio update (async, non-blocking)
+      
+      // Issue #86: Process circuit breaker events
+      const meta = await db.getContractMeta(ev.contractId).catch(() => null);
+      if (meta) {
+        processCircuitBreakerEvent(decoded, meta).catch(err => 
+          console.error('[circuitBreakerIndexer] Error:', err.message)
+        );
+      }
+      
       console.log(`[${ev.ledger}] ${decoded.function}: ${decoded.description}`);
     }
 
