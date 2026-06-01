@@ -5,6 +5,7 @@ import ResourceCosts from "../components/ResourceCosts";
 import StorageTierBreakdown from "../components/StorageTierBreakdown";
 import FiatValue from "../components/FiatValue";
 import GasLimitAlert from "../components/GasLimitAlert";
+import FeeSponsorBanner from "../components/FeeSponsorBanner";
 
 /** Parse amount and symbol from a transfer description. */
 function parseTransfer(description: string): { amount: number; symbol: string } | null {
@@ -86,6 +87,11 @@ export default function EventPage() {
 
       {/* Issue #40 — Resource Consumption breakdown */}
       <ResourceCosts event={ev} />
+
+      {/* Issue #164 — CAP-0080 ZK host function cost delta */}
+      {ev.zk_host_calls && (
+        <ZkCostDelta calls={ev.zk_host_calls.calls} delta={ev.zk_host_calls.delta} />
+      )}
 
       {/* Issue #125 — Gas-Limit Alert Flag */}
       <GasLimitAlert event={ev} />

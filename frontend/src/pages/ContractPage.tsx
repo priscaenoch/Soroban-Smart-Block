@@ -17,6 +17,7 @@ import NetworkComparison from "../components/NetworkComparison";
 import AddressConnectionGraph from "../components/AddressConnectionGraph";
 import WasmHashZone from "../components/WasmHashZone";
 import { useLocalAbi } from "../hooks/useLocalAbi";
+import TTLProgressBar from "../components/TTLProgressBar";
 
 // Demo source shown when no verified source is uploaded
 const DEMO_SOURCE = `// Verified source not yet uploaded for this contract.
@@ -346,6 +347,9 @@ export default function ContractPage() {
               <WasmHashZone />
             </div>
           </details>
+
+          {/* Issue #165: Live TTL expiration progress bars */}
+          <TTLProgressBar contractId={id} />
 
           {meta.functions.length > 0 && (
             <div className="card">

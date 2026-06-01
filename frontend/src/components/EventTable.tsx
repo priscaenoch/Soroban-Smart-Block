@@ -2,6 +2,40 @@ import { Link } from "react-router-dom";
 import type { DecodedEvent } from "../api";
 import FiatValue from "./FiatValue";
 import { getGasAlert } from "./GasLimitAlert";
+import { addressRoute, truncateAddress, isAccountAddress, isContractAddress, isMuxedAddress } from "../utils/strkey";
+
+/** Stellar strkey address pattern: G.../C.../M... (56+ chars, base32 alphabet) */
+const ADDRESS_RE = /\b([GCM][A-Z2-7]{55,})\b/g;
+
+/**
+ * Render a description string with any Stellar addresses (G..., C..., M...)
+ * replaced by clickable <Link> elements.
+ * M... muxed addresses link to the base G... wallet page via addressRoute().
+ */
+function LinkedDescription({ text }: { text: string }) {
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  let match: RegExpExecArray | null;
+  ADDRESS_RE.lastIndex = 0;
+  while ((match = ADDRESS_RE.exec(text)) !== null) {
+    const addr = match[1];
+    if (!isAccountAddress(addr) && !isContractAddress(addr) && !isMuxedAddress(addr)) continue;
+    if (match.index > last) parts.push(text.slice(last, match.index));
+    const route = addressRoute(addr);
+    if (route) {
+      parts.push(
+        <Link key={match.index} to={route} title={addr}>
+          {truncateAddress(addr)}
+        </Link>
+      );
+    } else {
+      parts.push(<span key={match.index} title={addr}>{truncateAddress(addr)}</span>);
+    }
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return <>{parts}</>;
+}
 
 /** Parse a multi-hop swap path from a description or swap_path field. */
 function parseSwapPath(description: string): string[] | null {
@@ -162,8 +196,7 @@ export default function EventTable({ events }: Props) {
                   </span>
                 )}
                 {ev.ttl_extension && <TTLExtensionBadge ext={ev.ttl_extension} />}
-                {ev.sac_side_effect && <SacSideEffectBadge kind={ev.sac_side_effect} />}
-                {ev.description}
+                <LinkedDescription text={ev.description} />
                 {ev.function === "transfer" && (() => {
                   const t = parseTransfer(ev.description);
                   return t ? <FiatValue amount={t.amount} symbol={t.symbol} /> : null;
