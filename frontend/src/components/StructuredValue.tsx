@@ -223,6 +223,16 @@ function ValueNode({ name, value, isRoot = false }: ValueNodeProps) {
         </div>
       );
     }
+    // Render fixed-size tuples of primitives inline: [100, 250]
+    const allPrimitive = value.every(v => v !== null && typeof v !== "object");
+    if (allPrimitive) {
+      return (
+        <div>
+          <span style={{ color: "var(--muted, #888)" }}>{name}:</span>{" "}
+          <span style={{ color: "#79c0ff" }}>[{value.join(", ")}]</span>
+        </div>
+      );
+    }
     return (
       <div>
         <div

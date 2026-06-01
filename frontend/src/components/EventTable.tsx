@@ -3,6 +3,20 @@ import type { DecodedEvent } from "../api";
 import FiatValue from "./FiatValue";
 import { getGasAlert } from "./GasLimitAlert";
 
+/** Parse a multi-hop swap path from a description or swap_path field. */
+function parseSwapPath(description: string): string[] | null {
+  const arrowParts = description.split(/\s*→\s*/);
+  if (arrowParts.length >= 2) {
+    const hops = arrowParts
+      .map(p => p.match(/([\d,.]+)\s+([A-Z]{2,10})/)?.[0])
+      .filter(Boolean) as string[];
+    if (hops.length >= 2) return hops;
+  }
+  const m = description.match(/([\d,.]+)\s+([A-Z]{2,10}).*?(?:for|to)\s+([\d,.]+)\s+([A-Z]{2,10})/i);
+  if (m) return [`${m[1]} ${m[2]}`, `${m[3]} ${m[4]}`];
+  return null;
+}
+
 /** Parse amount and symbol from a transfer description like "Address GA… transferred 50.00 PYUSD to …" */
 function parseTransfer(description: string): { amount: number; symbol: string } | null {
   const m = description.match(/transferred\s+([\d,.]+)\s+([A-Z]{2,10})/i);
@@ -87,6 +101,14 @@ export default function EventTable({ events }: Props) {
                 {ev.function === "transfer" && (() => {
                   const t = parseTransfer(ev.description);
                   return t ? <FiatValue amount={t.amount} symbol={t.symbol} /> : null;
+                })()}
+                {ev.function === "swap" && (() => {
+                  const path = ev.swap_path ?? parseSwapPath(ev.description);
+                  return path ? (
+                    <span style={{ marginLeft: 6, color: "var(--accent)", fontSize: 12, whiteSpace: "nowrap" }}>
+                      {path.join(" → ")}
+                    </span>
+                  ) : null;
                 })()}
               </td>
             </tr>

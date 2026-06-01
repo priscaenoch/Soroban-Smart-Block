@@ -1,5 +1,12 @@
 const BASE = "/api";
 
+export interface SpecType {
+  kind: "struct" | "enum" | "union" | "error_enum";
+  name: string;
+  fields?: { name: string; type: string }[];
+  cases?: { name: string; value?: number; types?: string[] }[];
+}
+
 export interface StorageWrite {
   tier: "instance" | "persistent" | "temporary";
   contractId: string;
@@ -40,6 +47,8 @@ export interface DecodedEvent {
   storage_tiers?: StorageTiers;
   // Issue #74: clawback compliance flag
   is_clawback?: boolean;
+  // Issue #75: AMM swap path hops ["10 USDC", "9.1 EURC", "5.2 XLM"]
+  swap_path?: string[];
 }
 
 export interface SourceFile {
@@ -117,6 +126,27 @@ export interface PrivilegedRole {
   updated_at: string;
 }
 
+// Issue #135: source verification signature
+export interface SourceVerification {
+  signer: string;
+  signature: string;
+  compiler_hash: string;
+  wasm_hash: string;
+  submitted_at: string;
+}
+
+// Issue #140: storage state diff entry
+export interface StateDiff {
+  ledger: number;
+  tx_hash: string | null;
+  key: string;
+  tier?: string;
+  old_value: string | null;
+  new_value: string | null;
+  change_type: "created" | "updated" | "removed";
+  created_at: string;
+}
+
 // Issue #117: sub-invocation record
 export interface SubInvocation {
   id: number;
@@ -192,5 +222,23 @@ export const api = {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  },
+
+  // Issue #135: multi-sig source verification
+  sourceVerifications: (id: string, wasmHash?: string) => {
+    const q = wasmHash ? `?wasm_hash=${encodeURIComponent(wasmHash)}` : "";
+    return get<SourceVerification[]>(`/contracts/${id}/source-verifications${q}`);
+  },
+  submitSourceVerification: (id: string, body: { wasm_hash: string; signer: string; signature: string; compiler_hash: string }) =>
+    fetch(`${BASE}/contracts/${id}/source-verifications`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).then(r => { if (!r.ok) throw new Error(`API ${r.status}`); return r.json(); }),
+
+  // Issue #140: state-diff timeline
+  stateDiffs: (id: string, key?: string) => {
+    const q = key ? `?key=${encodeURIComponent(key)}` : "";
+    return get<StateDiff[]>(`/contracts/${id}/state-diffs${q}`);
   },
 };

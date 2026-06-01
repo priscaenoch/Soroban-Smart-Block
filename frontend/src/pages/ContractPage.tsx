@@ -11,8 +11,12 @@ import SimulateButton from "../components/SimulateButton";
 import InvocationFlowChart, { type InvocationNode } from "../components/InvocationFlowChart";
 import PrivilegedRoles from "../components/PrivilegedRoles";
 import SdkSnippet from "../components/SdkSnippet";
-import CircuitBreakerStatus from "../components/CircuitBreakerStatus";
-import RwaMetadataDisplay from "../components/RwaMetadataDisplay";
+import AbiUploadZone from "../components/AbiUploadZone";
+import LocalAbiEventTable from "../components/LocalAbiEventTable";
+import NetworkComparison from "../components/NetworkComparison";
+import AddressConnectionGraph from "../components/AddressConnectionGraph";
+import WasmHashZone from "../components/WasmHashZone";
+import { useLocalAbi } from "../hooks/useLocalAbi";
 
 // Demo source shown when no verified source is uploaded
 const DEMO_SOURCE = `// Verified source not yet uploaded for this contract.
@@ -49,7 +53,7 @@ const DEMO_TREE: InvocationNode = {
   ],
 };
 
-type Tab = "overview" | "source" | "simulate" | "flow" | "roles" | "networks" | "graph";
+type Tab = "overview" | "source" | "simulate" | "flow" | "roles" | "networks" | "graph" | "state-diff";
 
 export default function ContractPage() {
   const { id = "" } = useParams();
@@ -139,13 +143,14 @@ export default function ContractPage() {
   }
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: "overview",  label: "Overview" },
-    { key: "source",    label: "Source Code" },
-    { key: "simulate",  label: "Simulate" },
-    { key: "flow",      label: "Invocation Flow" },
-    { key: "roles",     label: "Privileged Roles" },
-    { key: "networks",  label: "Networks" },
-    { key: "graph",     label: "Address Graph" },
+    { key: "overview",    label: "Overview" },
+    { key: "source",      label: "Source Code" },
+    { key: "simulate",    label: "Simulate" },
+    { key: "flow",        label: "Invocation Flow" },
+    { key: "roles",       label: "Privileged Roles" },
+    { key: "networks",    label: "Networks" },
+    { key: "graph",       label: "Address Graph" },
+    { key: "state-diff",  label: "State Timeline" },
   ];
 
   return (
@@ -325,6 +330,23 @@ export default function ContractPage() {
             </details>
           )}
 
+          {/* Issue #72: WASM binary hash calculator */}
+          <details
+            style={{
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              borderRadius: 8,
+              padding: "10px 16px",
+            }}
+          >
+            <summary style={{ cursor: "pointer", fontSize: 13, color: "var(--muted)", userSelect: "none", listStyle: "none" }}>
+              ▶ Compute WASM deploy hash locally
+            </summary>
+            <div style={{ marginTop: 12 }}>
+              <WasmHashZone />
+            </div>
+          </details>
+
           {meta.functions.length > 0 && (
             <div className="card">
               <h3 style={{ marginBottom: 8, fontSize: 14 }}>Functions</h3>
@@ -373,14 +395,21 @@ export default function ContractPage() {
         </>
       )}
 
-      {/* Tab: Source Code — Issues #45, #85 */}
+      {/* Tab: Source Code — Issues #45, #85, #135 */}
       {tab === "source" && (
-        meta.source_files && meta.source_files.length > 0
-          ? <SourceFileTree files={meta.source_files} />
-          : <RustCodeViewer
-              source={meta.source ?? DEMO_SOURCE}
-              filename={meta.source_file ?? `${id.slice(0, 8)}.rs`}
-            />
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <SourceVerificationBadge
+            contractId={id}
+            wasmHash={(meta as any).wasm_hash ?? undefined}
+          />
+          {meta.source_files && meta.source_files.length > 0
+            ? <SourceFileTree files={meta.source_files} />
+            : <RustCodeViewer
+                source={meta.source ?? DEMO_SOURCE}
+                filename={meta.source_file ?? `${id.slice(0, 8)}.rs`}
+              />
+          }
+        </div>
       )}
 
       {/* Tab: Simulate — Issue #46 */}
@@ -421,6 +450,9 @@ export default function ContractPage() {
 
       {/* Tab: Address Connection Graph — Issue #126 */}
       {tab === "graph" && <AddressConnectionGraph contractId={id} />}
+
+      {/* Tab: State-Diff Timeline — Issue #140 */}
+      {tab === "state-diff" && <StateDiffTimeline contractId={id} />}
     </div>
   );
 }
