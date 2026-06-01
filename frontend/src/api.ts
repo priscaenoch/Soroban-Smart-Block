@@ -49,6 +49,13 @@ export interface DecodedEvent {
   is_clawback?: boolean;
   // Issue #75: AMM swap path hops ["10 USDC", "9.1 EURC", "5.2 XLM"]
   swap_path?: string[];
+  // Protocol 26: TTL extension host function data
+  ttl_extension?: {
+    fn_name: string | null;
+    extend_to: number | null;
+    min_extension: number | null;
+    max_extension: number | null;
+  };
 }
 
 export interface SourceFile {

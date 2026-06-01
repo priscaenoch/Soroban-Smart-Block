@@ -49,6 +49,40 @@ function FunctionBadge({ fn }: { fn: string }) {
   return <span className="badge">{fn}</span>;
 }
 
+/** Inline badge for Protocol 26 TTL extension events. */
+function TTLExtensionBadge({ ext }: { ext: NonNullable<DecodedEvent["ttl_extension"]> }) {
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        padding: "2px 8px",
+        background: "rgba(99,102,241,0.12)",
+        border: "1px solid #6366f1",
+        borderRadius: 4,
+        fontSize: 11,
+        color: "#818cf8",
+        whiteSpace: "nowrap",
+        marginRight: 6,
+        verticalAlign: "middle",
+      }}
+      title="Protocol 26 TTL rent extension"
+    >
+      ⏱ TTL Extension
+      {ext.min_extension != null && (
+        <span style={{ color: "var(--muted)" }}>Requested: +{ext.min_extension} Ledgers</span>
+      )}
+      {ext.max_extension != null && (
+        <span style={{ color: "var(--muted)" }}>Clamp: {ext.max_extension}</span>
+      )}
+      {ext.extend_to != null && (
+        <span style={{ color: "var(--muted)" }}>→ {ext.extend_to}</span>
+      )}
+    </span>
+  );
+}
+
 export default function EventTable({ events }: Props) {
   if (!events.length) return <p style={{ color: "var(--muted)" }}>No events found.</p>;
 
@@ -97,6 +131,7 @@ export default function EventTable({ events }: Props) {
                     ⚠ High Gas
                   </span>
                 )}
+                {ev.ttl_extension && <TTLExtensionBadge ext={ev.ttl_extension} />}
                 {ev.description}
                 {ev.function === "transfer" && (() => {
                   const t = parseTransfer(ev.description);
