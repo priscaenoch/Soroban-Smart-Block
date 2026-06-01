@@ -173,6 +173,14 @@ export interface TxStatusResponse {
   error?: string | null;
 }
 
+// Issue #165: Live TTL status for contract instance and code entries
+export interface ContractTTL {
+  contract_id: string;
+  current_ledger: number;
+  instance: { live_until_ledger: number | null };
+  code:     { live_until_ledger: number | null };
+}
+
 export interface CircuitBreakerStatus {
   has_circuit_breaker: boolean;
   is_paused: boolean;
@@ -242,6 +250,9 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     }).then(r => { if (!r.ok) throw new Error(`API ${r.status}`); return r.json(); }),
+
+  // Issue #165: live TTL status (instance + code expiration ledgers)
+  contractTTL: (id: string) => get<ContractTTL>(`/contracts/${id}/ttl`),
 
   // Issue #140: state-diff timeline
   stateDiffs: (id: string, key?: string) => {
