@@ -43,6 +43,9 @@ export default function Nav() {
       <Link to="/sandbox" style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}>
         Sandbox
       </Link>
+      <Link to="/setup" style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}>
+        Setup
+      </Link>
       <form onSubmit={search} style={{ display: "flex", gap: 8, flex: 1, maxWidth: 600 }}>
         <input
           value={q}

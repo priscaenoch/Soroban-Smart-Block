@@ -12,6 +12,7 @@ const RpcMetricsDashboard = lazy(() => import("./pages/RpcMetricsDashboard"));
 const GraphPage = lazy(() => import("./pages/GraphPage"));
 const SandboxPage = lazy(() => import("./pages/SandboxPage"));
 const DeveloperWorkspace = lazy(() => import("./pages/DeveloperWorkspace"));
+const SetupPage = lazy(() => import("./pages/SetupPage"));
 
 function Fallback() {
   return <p style={{ padding: 32, textAlign: "center", color: "var(--muted)" }}>Loading…</p>;
@@ -33,6 +34,7 @@ export default function App() {
             <Route path="/rpc-metrics" element={<RpcMetricsDashboard />} />
             <Route path="/graph" element={<GraphPage />} />
             <Route path="/sandbox" element={<SandboxPage />} />
+            <Route path="/setup" element={<SetupPage />} />
           </Routes>
         </Suspense>
       </main>

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discord Community
+    url: https://discord.gg/stellar
+    about: Ask questions in the official Stellar developer Discord channels.
