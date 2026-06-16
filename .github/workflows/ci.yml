@@ -1,60 +1,352 @@
 name: CI
+
 on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, "release/*"]
+    types: [opened, synchronize, reopened, edited]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  contract:
-    name: Rust Contract
+  # ── 1. Lint & Format ────────────────────────────────────────────────────────
+  lint:
+    name: Lint & Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # Rust toolchain
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          target: wasm32-unknown-unknown
-      - run: cargo test -p soroban-explorer-contract
+          toolchain: stable
+          components: rustfmt, clippy
+
+      - name: Cache Rust artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-lint-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-lint-
+
+      - name: Rust fmt check
+        run: cargo fmt --check
         working-directory: contracts/explorer
 
+      - name: Rust clippy (workspace)
+        run: cargo clippy -- -D warnings
+
+      # Node toolchain
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache indexer node_modules
+        uses: actions/cache@v4
+        with:
+          path: indexer/node_modules
+          key: indexer-20-${{ hashFiles('indexer/package-lock.json') }}
+          restore-keys: indexer-20-
+
+      - name: Cache frontend node_modules
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: frontend-20-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: frontend-20-
+
+      - name: Install indexer deps
+        run: npm ci
+        working-directory: indexer
+
+      - name: Install frontend deps
+        run: npm ci
+        working-directory: frontend
+
+      - name: ESLint — indexer
+        run: npx eslint --max-warnings 0 src/
+        working-directory: indexer
+
+      - name: ESLint — frontend
+        run: npx eslint --max-warnings 0 src/
+        working-directory: frontend
+
+      - name: Prettier check
+        run: >
+          npx prettier --check
+          "indexer/src/**/*.{js,json}"
+          "frontend/src/**/*.{ts,tsx}"
+          "**/*.md"
+          "!**/node_modules/**"
+          "!**/dist/**"
+
+      - name: PR title (conventional commits)
+        if: github.event_name == 'pull_request'
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ── 2. Rust Contract Matrix ──────────────────────────────────────────────────
+  rust:
+    name: Rust (${{ matrix.os }}, ${{ matrix.rust }})
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.rust == 'nightly' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        rust: [stable, nightly]
+        features: ["", "--all-features"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          target: wasm32-unknown-unknown
+          components: rustfmt, clippy
+
+      - name: Cache Rust artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-${{ matrix.rust }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-${{ matrix.rust }}-cargo-
+
+      - name: cargo check
+        run: cargo check ${{ matrix.features }}
+
+      - name: cargo test
+        run: cargo test -p soroban-explorer-contract ${{ matrix.features }}
+        working-directory: contracts/explorer
+
+      - name: cargo doc
+        run: cargo doc --no-deps ${{ matrix.features }}
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+
+  # ── 3. Indexer Matrix ────────────────────────────────────────────────────────
   indexer:
-    name: Indexer
+    name: Indexer (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20, 22]
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: indexer/package-lock.json
-      - run: npm ci
-        working-directory: indexer
-      - run: npm test
+          node-version: ${{ matrix.node }}
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: indexer/node_modules
+          key: indexer-${{ matrix.node }}-${{ hashFiles('indexer/package-lock.json') }}
+          restore-keys: indexer-${{ matrix.node }}-
+
+      - name: Install
+        run: npm ci
         working-directory: indexer
 
+      - name: Audit (high/critical)
+        run: npm audit --audit-level=high
+        working-directory: indexer
+
+      - name: Test
+        run: npm test
+        working-directory: indexer
+
+      - name: Test with coverage thresholds (Node 22 only)
+        if: matrix.node == 22
+        run: >
+          node --test
+          --experimental-test-coverage
+          --test-coverage-branches=70
+          --test-coverage-functions=75
+          --test-coverage-lines=80
+          --test-coverage-statements=80
+          test/**/*.test.js
+        working-directory: indexer
+
+  # ── 4. Frontend Matrix ───────────────────────────────────────────────────────
   frontend:
-    name: Frontend
+    name: Frontend (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - run: npm ci
-        working-directory: frontend
-      - run: npm run build
+          node-version: ${{ matrix.node }}
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: frontend-${{ matrix.node }}-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: frontend-${{ matrix.node }}-
+
+      - name: Install
+        run: npm ci
         working-directory: frontend
 
+      - name: Audit (high/critical)
+        run: npm audit --audit-level=high
+        working-directory: frontend
+
+      - name: Build (typecheck + Vite)
+        run: npm run build
+        working-directory: frontend
+
+  # ── 5. Docker Build ──────────────────────────────────────────────────────────
   docker:
     name: Docker Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -t indexer ./indexer
-      - run: docker build -t frontend ./frontend
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-buildx-
+
+      - name: Build indexer image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./indexer
+          push: false
+          tags: indexer:ci
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: false
+          tags: frontend:ci
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Rotate build cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+  # ── 6. Security Scan ─────────────────────────────────────────────────────────
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+
+      - name: CodeQL autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:javascript-typescript
+
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          ignore-unfixed: true
+
+      - name: Upload Trivy SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy
+
+      - name: Dependency review
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+
+  # ── 7. PR Quality Gates ──────────────────────────────────────────────────────
+  pr-quality:
+    name: PR Quality Gates
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check branch name convention
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          PATTERN="^(feature|fix|docs|chore|refactor|test|ci|hotfix|release)/"
+          if [[ ! "$BRANCH" =~ $PATTERN ]]; then
+            echo "::error::Branch '$BRANCH' does not follow the naming convention."
+            echo "::error::Expected pattern: <type>/<description>"
+            echo "::error::Allowed types: feature, fix, docs, chore, refactor, test, ci, hotfix, release"
+            exit 1
+          fi
+          echo "Branch name '$BRANCH' is valid."
+
+      - name: Label PR by size
+        uses: codelytv/pr-size-labeler@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          xs_label: "size/XS"
+          xs_max_size: 10
+          s_label: "size/S"
+          s_max_size: 100
+          m_label: "size/M"
+          m_max_size: 500
+          l_label: "size/L"
+          l_max_size: 1000
+          xl_label: "size/XL"
+          fail_if_xl: false
+
+      - name: Auto-assign PR author
+        uses: toshimaru/auto-author-assign@v2.1.1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Label PR by changed paths
+        uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yml

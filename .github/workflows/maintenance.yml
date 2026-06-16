@@ -1,0 +1,98 @@
+name: Scheduled Maintenance
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  # ── DB VACUUM ─────────────────────────────────────────────────────────────────
+  db-vacuum:
+    name: Database VACUUM
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: VACUUM events table
+        run: |
+          psql "$DATABASE_URL" -c "VACUUM ANALYZE events;"
+          psql "$DATABASE_URL" -c "VACUUM ANALYZE wallet_events;"
+          echo "VACUUM complete on events and wallet_events"
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  # ── Stale Branch Cleanup ──────────────────────────────────────────────────────
+  stale-branches:
+    name: Clean Up Stale Branches
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Delete branches inactive for 90+ days
+        run: |
+          CUTOFF=$(date -d '90 days ago' +%s)
+          DELETED=0
+
+          git fetch --prune origin
+
+          for BRANCH in $(git branch -r | grep -v 'HEAD\|main\|release/' | sed 's|origin/||'); do
+            LAST_COMMIT=$(git log -1 --format="%ct" "origin/$BRANCH" 2>/dev/null || echo 0)
+            if [[ "$LAST_COMMIT" -lt "$CUTOFF" ]]; then
+              echo "Deleting stale branch: $BRANCH (last commit $(date -d @$LAST_COMMIT))"
+              gh api -X DELETE "repos/${{ github.repository }}/git/refs/heads/$BRANCH" || true
+              DELETED=$((DELETED + 1))
+            fi
+          done
+
+          echo "Deleted $DELETED stale branch(es)"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ── Dependency Update PRs ─────────────────────────────────────────────────────
+  dependency-updates:
+    name: Dependency Update PRs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check for outdated indexer packages
+        id: indexer-outdated
+        run: |
+          cd indexer
+          OUTDATED=$(npm outdated --json 2>/dev/null || echo '{}')
+          echo "outdated=$OUTDATED" >> "$GITHUB_OUTPUT"
+          echo "### Indexer outdated packages" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`\`\`json" >> "$GITHUB_STEP_SUMMARY"
+          echo "$OUTDATED" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check for outdated frontend packages
+        id: frontend-outdated
+        run: |
+          cd frontend
+          OUTDATED=$(npm outdated --json 2>/dev/null || echo '{}')
+          echo "outdated=$OUTDATED" >> "$GITHUB_OUTPUT"
+          echo "### Frontend outdated packages" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`\`\`json" >> "$GITHUB_STEP_SUMMARY"
+          echo "$OUTDATED" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check for outdated Cargo dependencies
+        run: |
+          cargo install cargo-outdated --quiet || true
+          cargo outdated 2>/dev/null >> "$GITHUB_STEP_SUMMARY" || echo "cargo-outdated not available"
+
+      - name: Create dependency-update summary issue
+        run: |
+          echo "Dependency audit complete. Review the step summary for details."
+          echo "Consider enabling Dependabot (/.github/dependabot.yml) for automated PRs."

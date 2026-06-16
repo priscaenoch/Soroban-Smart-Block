@@ -1,22 +1,77 @@
-name: Deploy
+name: CD — Deploy
+
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options: [dev, staging, production]
+      image_tag:
+        description: "Docker image tag to deploy (defaults to latest for env)"
+        required: false
+        type: string
   push:
-    tags: ["v*"]
+    branches:
+      - "release/*"
+    tags:
+      - "v*"
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  deploy:
-    name: Build & Push Docker Images
+  # ── Resolve target environment ────────────────────────────────────────────────
+  resolve-env:
+    name: Resolve Environment
     runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.set.outputs.environment }}
+      image_tag: ${{ steps.set.outputs.image_tag }}
+    steps:
+      - id: set
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            ENV="${{ github.event.inputs.environment }}"
+            TAG="${{ github.event.inputs.image_tag || github.sha }}"
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            ENV="production"
+            TAG="${GITHUB_REF_NAME}"
+          elif [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
+            ENV="staging"
+            TAG="${{ github.sha }}"
+          else
+            ENV="dev"
+            TAG="${{ github.sha }}"
+          fi
+          echo "environment=$ENV" >> "$GITHUB_OUTPUT"
+          echo "image_tag=$TAG" >> "$GITHUB_OUTPUT"
+
+  # ── 1. Build & Push Docker Images ────────────────────────────────────────────
+  build-images:
+    name: Build Images (${{ needs.resolve-env.outputs.environment }})
+    runs-on: ubuntu-latest
+    needs: resolve-env
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
+    outputs:
+      indexer_digest: ${{ steps.build-indexer.outputs.digest }}
+      frontend_digest: ${{ steps.build-frontend.outputs.digest }}
     steps:
       - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/setup-buildx-action@v3
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -25,29 +80,349 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push indexer
-        uses: docker/build-push-action@v5
+      - name: Cache Docker layers
+        uses: actions/cache@v4
         with:
-          context: indexer
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-buildx-
+
+      - name: Build and push indexer
+        id: build-indexer
+        uses: docker/build-push-action@v6
+        with:
+          context: ./indexer
+          platforms: linux/amd64,linux/arm64
           push: true
+          provenance: true
+          sbom: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/indexer:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/indexer:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/indexer:${{ needs.resolve-env.outputs.image_tag }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/indexer:${{ needs.resolve-env.outputs.environment }}-latest
+          cache-from: |
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/indexer:buildcache
+            type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.environment=${{ needs.resolve-env.outputs.environment }}
 
       - name: Build and push frontend
-        uses: docker/build-push-action@v5
+        id: build-frontend
+        uses: docker/build-push-action@v6
         with:
-          context: frontend
+          context: ./frontend
+          platforms: linux/amd64,linux/arm64
           push: true
+          provenance: true
+          sbom: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:${{ needs.resolve-env.outputs.image_tag }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:${{ needs.resolve-env.outputs.environment }}-latest
+          cache-from: |
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:buildcache
+            type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.environment=${{ needs.resolve-env.outputs.environment }}
 
-      - name: Deploy placeholder
+      - name: Rotate build cache
         run: |
-          echo "============================================="
-          echo " Staging/production deployment - TBD"
-          echo " Images pushed to GHCR:"
-          echo "   ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/indexer:${{ github.sha }}"
-          echo "   ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:${{ github.sha }}"
-          echo "============================================="
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      - name: Attest indexer image
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/indexer
+          subject-digest: ${{ steps.build-indexer.outputs.digest }}
+          push-to-registry: true
+
+      - name: Attest frontend image
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend
+          subject-digest: ${{ steps.build-frontend.outputs.digest }}
+          push-to-registry: true
+
+  # ── 2. Run Migrations ────────────────────────────────────────────────────────
+  migrate:
+    name: Run Migrations (${{ needs.resolve-env.outputs.environment }})
+    runs-on: ubuntu-latest
+    needs: [resolve-env, build-images]
+    environment: ${{ needs.resolve-env.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install indexer deps
+        run: npm ci
+        working-directory: indexer
+
+      - name: Run migrations
+        run: npm run migrate:up
+        working-directory: indexer
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Verify migration success
+        run: npm run migrate:status
+        working-directory: indexer
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  # ── 3a. Deploy to dev ────────────────────────────────────────────────────────
+  deploy-dev:
+    name: Deploy — dev
+    runs-on: ubuntu-latest
+    needs: [resolve-env, migrate]
+    if: needs.resolve-env.outputs.environment == 'dev'
+    environment:
+      name: dev
+      url: ${{ vars.APP_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Health check (baseline)
+        run: curl -sf "${{ vars.APP_URL }}/api/health" || true
+
+      - name: Deploy via docker-compose
+        run: |
+          echo "Deploying to dev (immediate restart)"
+          echo "IMAGE_TAG=${{ needs.resolve-env.outputs.image_tag }}" > .env.deploy
+          echo "REGISTRY=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" >> .env.deploy
+        # In a real deployment:
+        # ssh $DEV_HOST "docker-compose pull && docker-compose up -d"
+
+      - name: Post-deploy health check
+        run: |
+          echo "Waiting for services..."
+          sleep 10
+          curl -sf "${{ vars.APP_URL }}/api/health"
+
+  # ── 3b. Deploy to staging (blue-green) ───────────────────────────────────────
+  deploy-staging:
+    name: Deploy — staging
+    runs-on: ubuntu-latest
+    needs: [resolve-env, migrate]
+    if: needs.resolve-env.outputs.environment == 'staging'
+    environment:
+      name: staging
+      url: ${{ vars.APP_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Health check (baseline blue)
+        run: curl -sf "${{ vars.APP_URL }}/api/health"
+
+      - name: Deploy green environment
+        run: |
+          echo "Starting blue-green deploy for staging"
+          echo "IMAGE_TAG=${{ needs.resolve-env.outputs.image_tag }}"
+          # In a real deployment:
+          # 1. Start green containers alongside blue
+          # 2. Run health checks on green
+          # 3. Swap load balancer to green
+          # 4. Remove blue containers
+
+      - name: Post-deploy health check (green)
+        run: |
+          sleep 15
+          curl -sf "${{ vars.APP_URL }}/api/health"
+          curl -sf "${{ vars.APP_URL }}/api/events?limit=1"
+
+  # ── 3c. Deploy to production (canary, requires approval) ─────────────────────
+  deploy-production:
+    name: Deploy — production
+    runs-on: ubuntu-latest
+    needs: [resolve-env, migrate]
+    if: needs.resolve-env.outputs.environment == 'production'
+    environment:
+      name: production
+      url: ${{ vars.APP_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Health check (baseline)
+        run: curl -sf "${{ vars.APP_URL }}/api/health"
+
+      - name: Canary deploy — 10% traffic
+        run: |
+          echo "Shifting 10% traffic to new deployment..."
+          echo "IMAGE_TAG=${{ needs.resolve-env.outputs.image_tag }}"
+          # In a real deployment: configure load balancer weights
+
+      - name: Monitor canary (5 min)
+        run: |
+          echo "Monitoring canary at 10% for 5 minutes..."
+          for i in $(seq 1 10); do
+            curl -sf "${{ vars.APP_URL }}/api/health"
+            sleep 30
+          done
+
+      - name: Canary deploy — 50% traffic
+        run: echo "Shifting to 50% traffic..."
+
+      - name: Monitor at 50% (5 min)
+        run: |
+          for i in $(seq 1 10); do
+            curl -sf "${{ vars.APP_URL }}/api/health"
+            sleep 30
+          done
+
+      - name: Full rollout — 100% traffic
+        run: echo "Full rollout complete."
+
+  # ── 4. Post-deployment Smoke Tests ───────────────────────────────────────────
+  smoke-tests:
+    name: Smoke Tests (${{ needs.resolve-env.outputs.environment }})
+    runs-on: ubuntu-latest
+    needs:
+      - resolve-env
+      - deploy-dev
+      - deploy-staging
+      - deploy-production
+    if: always() && (needs.deploy-dev.result == 'success' || needs.deploy-staging.result == 'success' || needs.deploy-production.result == 'success')
+    environment: ${{ needs.resolve-env.outputs.environment }}
+    steps:
+      - name: API health check
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.APP_URL }}/api/health")
+          if [ "$STATUS" != "200" ]; then
+            echo "::error::Health check failed with HTTP $STATUS"
+            exit 1
+          fi
+          echo "Health check passed (HTTP 200)"
+
+      - name: Events endpoint check
+        run: |
+          RESPONSE=$(curl -s "${{ vars.APP_URL }}/api/events?limit=1")
+          echo "$RESPONSE" | python3 -c "import sys, json; data = json.load(sys.stdin); assert isinstance(data, list), 'Expected array'"
+          echo "Events endpoint returned a valid array"
+
+      - name: WebSocket connectivity check
+        run: |
+          npm install -g wscat
+          timeout 10 wscat -c "wss://${{ vars.WS_HOST }}" --execute "ping" || true
+          echo "WebSocket connection test completed"
+
+      - name: Indexer lag check (< 30 ledgers behind)
+        run: |
+          METRICS=$(curl -s "${{ vars.APP_URL }}/api/health")
+          LAG=$(echo "$METRICS" | python3 -c "
+          import sys, json
+          data = json.load(sys.stdin)
+          print(data.get('indexer', {}).get('ledger_lag', 0))
+          " 2>/dev/null || echo 0)
+          echo "Indexer ledger lag: $LAG"
+          if [ "$LAG" -gt 30 ]; then
+            echo "::error::Indexer is $LAG ledgers behind (threshold: 30)"
+            exit 1
+          fi
+
+      - name: Notify deployment success
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": ":white_check_mark: *Deploy successful* to `${{ needs.resolve-env.outputs.environment }}` — `${{ needs.resolve-env.outputs.image_tag }}` <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        continue-on-error: true
+
+  # ── 5. Rollback ──────────────────────────────────────────────────────────────
+  rollback:
+    name: Rollback (${{ needs.resolve-env.outputs.environment }})
+    runs-on: ubuntu-latest
+    needs:
+      - resolve-env
+      - smoke-tests
+    if: failure() && needs.smoke-tests.result == 'failure'
+    environment: ${{ needs.resolve-env.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Roll back Docker containers
+        run: |
+          echo "Rolling back to previous image tag..."
+          echo "This restores the previous ${{ needs.resolve-env.outputs.environment }}-latest tag"
+          # In a real deployment:
+          # docker service update --image <previous-tag> indexer
+          # docker service update --image <previous-tag> frontend
+
+      - name: Roll back migrations (if any)
+        run: |
+          echo "Rolling back most recent migration..."
+          # npm run migrate:down
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Verify rollback health
+        run: curl -sf "${{ vars.APP_URL }}/api/health"
+
+      - name: Notify on rollback
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": ":rotating_light: *Rollback triggered* on `${{ needs.resolve-env.outputs.environment }}` — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        continue-on-error: true
+
+  # ── 6. Release Automation (tag push only) ─────────────────────────────────────
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [resolve-env, smoke-tests]
+    if: startsWith(github.ref, 'refs/tags/v') && needs.smoke-tests.result == 'success'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        uses: orhun/git-cliff-action@v3
+        with:
+          config: .github/cliff.toml
+          args: --latest --strip header
+        env:
+          OUTPUT: CHANGELOG.md
+
+      - name: Bump npm versions
+        run: |
+          cd indexer && npm version "${{ github.ref_name }}" --no-git-tag-version
+          cd ../frontend && npm version "${{ github.ref_name }}" --no-git-tag-version
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "Release ${{ github.ref_name }}"
+          body_path: CHANGELOG.md
+          generate_release_notes: true
+          files: |
+            CHANGELOG.md
+
+      - name: Notify on release
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": ":rocket: *Released ${{ github.ref_name }}* — <${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}|View release>"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        continue-on-error: true

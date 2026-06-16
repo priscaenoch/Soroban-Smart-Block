@@ -6,6 +6,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Built on Stellar](https://img.shields.io/badge/Built%20on-Stellar-blueviolet)](https://stellar.org)
 [![CI](https://github.com/Soroban-Smart-Block-Explorer/Soroban-Smart-Block/actions/workflows/ci.yml/badge.svg)](https://github.com/Soroban-Smart-Block-Explorer/Soroban-Smart-Block/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Soroban-Smart-Block-Explorer/Soroban-Smart-Block/actions/workflows/security.yml/badge.svg)](https://github.com/Soroban-Smart-Block-Explorer/Soroban-Smart-Block/actions/workflows/security.yml)
+[![codecov](https://codecov.io/gh/Soroban-Smart-Block-Explorer/Soroban-Smart-Block/branch/main/graph/badge.svg)](https://codecov.io/gh/Soroban-Smart-Block-Explorer/Soroban-Smart-Block)
 
 ---
 

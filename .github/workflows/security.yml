@@ -1,0 +1,177 @@
+name: Security Audit
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "**/package.json"
+      - "**/package-lock.json"
+      - "**/Cargo.toml"
+      - "**/Cargo.lock"
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  # ── Full CodeQL Scan ──────────────────────────────────────────────────────────
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-extended,security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:javascript-typescript
+
+  # ── Dependency Audit ──────────────────────────────────────────────────────────
+  dependency-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: npm audit — indexer
+        run: npm audit --audit-level=high --json | tee indexer-audit.json || true
+        working-directory: indexer
+
+      - name: npm audit — frontend
+        run: npm audit --audit-level=high --json | tee frontend-audit.json || true
+        working-directory: frontend
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --quiet
+
+      - name: cargo audit
+        run: cargo audit --json | tee cargo-audit.json || true
+
+      - name: Parse and fail on critical/high findings
+        run: |
+          EXIT=0
+          for FILE in indexer/indexer-audit.json frontend/frontend-audit.json; do
+            if [ -f "$FILE" ]; then
+              HIGH=$(python3 -c "
+          import json, sys
+          data = json.load(open('$FILE'))
+          vulns = data.get('vulnerabilities', {})
+          count = sum(
+              v.get('severity') in ('high', 'critical')
+              for v in vulns.values()
+          )
+          print(count)
+              " 2>/dev/null || echo 0)
+              if [ "$HIGH" -gt 0 ]; then
+                echo "::error::$HIGH high/critical vulnerability(ies) found in $FILE"
+                EXIT=1
+              fi
+            fi
+          done
+          exit $EXIT
+
+      - name: Upload audit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-reports
+          path: |
+            indexer/indexer-audit.json
+            frontend/frontend-audit.json
+            cargo-audit.json
+          retention-days: 30
+
+  # ── Secret Scanning ───────────────────────────────────────────────────────────
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog OSS scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          extra_args: --only-verified
+
+  # ── Trivy Full Scan ───────────────────────────────────────────────────────────
+  trivy-full:
+    name: Trivy Full Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Filesystem scan (SARIF)
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-fs.sarif
+          severity: CRITICAL,HIGH,MEDIUM
+          exit-code: "0"
+          ignore-unfixed: true
+
+      - name: Config / IaC scan
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          scan-type: config
+          scan-ref: .
+          format: sarif
+          output: trivy-iac.sarif
+          exit-code: "0"
+
+      - name: Upload filesystem SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-fs.sarif
+          category: trivy-fs
+
+      - name: Upload IaC SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-iac.sarif
+          category: trivy-iac
+
+  # ── SBOM Generation ───────────────────────────────────────────────────────────
+  sbom:
+    name: Generate SBOM
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate SBOM (Syft)
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          output-file: sbom.spdx.json
+          format: spdx-json
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ github.sha }}
+          path: sbom.spdx.json
+          retention-days: 90

@@ -1,0 +1,22 @@
+# Auto-request reviews based on changed paths.
+# Org teams should be created at github.com/orgs/Soroban-Smart-Block-Explorer/teams
+
+# Global fallback
+* @Soroban-Smart-Block-Explorer/maintainers
+
+# Rust smart contract
+/contracts/ @Soroban-Smart-Block-Explorer/contracts
+
+# Indexer (Node.js)
+/indexer/ @Soroban-Smart-Block-Explorer/backend
+
+# Frontend (React/TypeScript)
+/frontend/ @Soroban-Smart-Block-Explorer/frontend
+
+# CI/CD and infrastructure
+/.github/ @Soroban-Smart-Block-Explorer/devops
+/infra/ @Soroban-Smart-Block-Explorer/devops
+
+# Documentation
+/docs/ @Soroban-Smart-Block-Explorer/maintainers
+*.md @Soroban-Smart-Block-Explorer/maintainers
