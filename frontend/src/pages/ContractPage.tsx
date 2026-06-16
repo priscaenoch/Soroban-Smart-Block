@@ -18,6 +18,11 @@ import AddressConnectionGraph from "../components/AddressConnectionGraph";
 import WasmHashZone from "../components/WasmHashZone";
 import { useLocalAbi } from "../hooks/useLocalAbi";
 import TTLProgressBar from "../components/TTLProgressBar";
+import CircuitBreakerStatus from "../components/CircuitBreakerStatus";
+import QuorumFreezeBadge from "../components/QuorumFreezeBadge";
+import RwaMetadataDisplay from "../components/RwaMetadataDisplay";
+import SourceVerificationBadge from "../components/SourceVerificationBadge";
+import StateDiffTimeline from "../components/StateDiffTimeline";
 
 // Demo source shown when no verified source is uploaded
 const DEMO_SOURCE = `// Verified source not yet uploaded for this contract.
@@ -231,6 +236,8 @@ export default function ContractPage() {
             </div>
           </div>
         )}
+
+      </div>
 
       {/* Tab bar */}
       <div style={{ display: "flex", gap: 4, borderBottom: "1px solid var(--border)", paddingBottom: 0 }}>

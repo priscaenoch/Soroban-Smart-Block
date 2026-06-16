@@ -100,7 +100,7 @@ function TierRow({
         padding: "8px 12px",
         borderRadius: 6,
         background: "var(--bg)",
-        borderLeft: `3px solid ${accent}`,
+        borderLeft: `3px solid ${color}`,
       }}
     >
       {/* Coloured role pill */}
@@ -114,7 +114,7 @@ function TierRow({
           color,
         }}
       >
-        {tier}
+        {role}
       </span>
 
       {/* Address */}

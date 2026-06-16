@@ -73,7 +73,7 @@ function tryDecode(b64: string): { tree: TreeNode; label: string } | { error: st
             outer: for (const op of ops) {
               const body = op.body();
               if (body.switch().name !== "invokeHostFunction") continue;
-              const auths = body.invokeHostFunction().auth() ?? [];
+              const auths = (body as any).invokeHostFunction().auth() ?? [];
               for (const authEntry of auths) {
                 const creds = authEntry.credentials();
                 if (creds.switch().name === "sorobanCredentialsSourceAccount") continue;
@@ -106,7 +106,7 @@ function tryDecode(b64: string): { tree: TreeNode; label: string } | { error: st
               const body = op.body();
               const name = body.switch().name;
               if (name === "invokeHostFunction") {
-                const hf = body.invokeHostFunction().hostFunction();
+                const hf = (body as any).invokeHostFunction().hostFunction();
                 if (hf.switch() === xdr.HostFunctionType.hostFunctionTypeInvokeContract()) {
                   const inv = hf.invokeContract();
                   return { operation: "invokeHostFunction", contract: inv.contractAddress().toString(), function: inv.functionName().toString(), args: inv.args().map(scValToTree) };
@@ -114,7 +114,7 @@ function tryDecode(b64: string): { tree: TreeNode; label: string } | { error: st
               }
               return { operation: name };
             }),
-          };
+          } as TreeNode;
         }
         const tx = env.value().tx ? env.value().tx() : (env as any).v0?.().tx?.();
         const ops = (tx as any).operations?.() ?? [];
@@ -124,7 +124,7 @@ function tryDecode(b64: string): { tree: TreeNode; label: string } | { error: st
             const body = op.body();
             const name = body.switch().name;
             if (name === "invokeHostFunction") {
-              const hf = body.invokeHostFunction().hostFunction();
+              const hf = (body as any).invokeHostFunction().hostFunction();
               if (hf.switch() === xdr.HostFunctionType.hostFunctionTypeInvokeContract()) {
                 const inv = hf.invokeContract();
                 return { operation: "invokeHostFunction", contract: inv.contractAddress().toString(), function: inv.functionName().toString(), args: inv.args().map(scValToTree) };
@@ -132,7 +132,7 @@ function tryDecode(b64: string): { tree: TreeNode; label: string } | { error: st
             }
             return { operation: name };
           }),
-        };
+        } as TreeNode;
       },
     },
     { label: "ScVal",            fn: () => scValToTree(xdr.ScVal.fromXDR(trimmed, "base64")) },

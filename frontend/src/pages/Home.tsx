@@ -21,6 +21,7 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const [txType, setTxType] = useState<TxType>("all");
 
+  const queryClient = useQueryClient();
   const { data: events = [], isLoading } = useQuery({
     queryKey: ["events", fnFilter, page, txType],
     queryFn: () => api.events({
@@ -32,7 +33,6 @@ export default function Home() {
 
   // Issue #39 — invalidate the event list when a live event arrives on page 1
   const handleLiveEvent = useCallback((ev: DecodedEvent) => {
-    setLiveCount(c => c + 1);
     if (page === 1 && (!fnFilter || ev.function === fnFilter)) {
       queryClient.invalidateQueries({ queryKey: ["events", fnFilter, 1] });
     }

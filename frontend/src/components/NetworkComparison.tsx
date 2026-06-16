@@ -70,7 +70,7 @@ export default function NetworkComparison({ contractId }: { contractId: string }
             </tr>
           </thead>
           <tbody>
-            {data.statuses.map(s => (
+            {data.statuses.map((s) => (
               <tr key={s.network} style={{ borderBottom: "1px solid var(--border)" }}>
                 <td style={td}>
                   <span style={{ textTransform: "capitalize", fontWeight: 500 }}>{s.network}</span>

@@ -115,6 +115,10 @@ export interface DecodedEvent {
   zk_host_calls?: { calls: ZkHostCall[]; delta: ZkCostDelta | null };
   // Heuristic fallback params: present when no ABI is registered
   heuristic_params?: HeuristicParam[];
+  // SAC implicit side-effect (auto-created account or trustline)
+  sac_side_effect?: "account_created" | "trustline_opened";
+  // Issue #177: Factory deployment trace
+  factory_deployment?: FactoryDeploymentTree;
 }
 
 export interface SourceFile {
@@ -268,6 +272,29 @@ export interface RwaMetadata {
   rwa_type: string | null;
 }
 
+export interface NetworkStatus {
+  network: string;
+  deployed: boolean;
+  wasmHash?: string;
+  balance?: string;
+  error?: string;
+}
+
+export interface NetworkComparisonResult {
+  contractId: string;
+  statuses: NetworkStatus[];
+  hasVersionMismatch: boolean;
+}
+
+export interface GraphNode { id: string; label: string; type: string; }
+
+export interface GraphEdge { source: string; target: string; label?: string; amount?: string; }
+
+export interface AddressGraphData {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}
+
 export const api = {
   events: (params: { contract?: string; fn?: string; page?: number; type?: string }) => {
     const q = new URLSearchParams();
@@ -339,4 +366,10 @@ export const api = {
 
   // Issue #142: global contract dependency graph
   contractGraph: (limit = 500) => get<ContractGraphData>(`/contract-graph?limit=${limit}`),
+
+  // Issue #172: CAP-0077 quorum freeze status
+  quorumFreeze: (id: string) => get<{ is_frozen: boolean; ledger: number; tx_hash: string; frozen_ids: string[] }>(`/contracts/${id}/quorum-freeze`),
+
+  // Full contract spec (functions + custom types)
+  specFull: (id: string) => get<{ functions: { name: string; outputs?: string[] }[]; types: SpecType[] }>(`/contracts/${id}/spec-full`),
 };

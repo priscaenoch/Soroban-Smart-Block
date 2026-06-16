@@ -50,7 +50,7 @@ export default function AddressConnectionGraph({ contractId }: Props) {
       }
 
       const elements = [
-        ...data.nodes.map(n => ({
+        ...data.nodes.map((n) => ({
           data: {
             id: n.id,
             label: n.label.length > 12 ? `${n.label.slice(0, 6)}…${n.label.slice(-4)}` : n.label,

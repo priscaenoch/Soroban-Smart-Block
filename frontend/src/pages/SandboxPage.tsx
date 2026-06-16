@@ -41,12 +41,12 @@ function parseEnvelope(b64: string): ParsedInvocation {
   for (const op of tx.operations()) {
     const body = op.body();
     if (body.switch().name !== "invokeHostFunction") continue;
-    const hf = body.invokeHostFunction().hostFunction();
+    const hf = (body as any).invokeHostFunction().hostFunction();
     if (hf.switch() !== xdr.HostFunctionType.hostFunctionTypeInvokeContract()) continue;
     const inv = hf.invokeContract();
     const contractId = StrKey.encodeContract(inv.contractAddress().contractId());
     const fnName = inv.functionName().toString();
-    const args = inv.args().map((a) => a.toXDR("base64"));
+    const args = inv.args().map((a: xdr.ScVal) => a.toXDR("base64"));
     return { contractId, fnName, args, sourceAccount, fee, networkPassphrase: Networks.TESTNET };
   }
   throw new Error("No invokeHostFunction operation found in this envelope.");
