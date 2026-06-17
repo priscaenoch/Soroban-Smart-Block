@@ -6,15 +6,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 
-function StatusBadge({
-  deployed,
-  error,
-}: {
-  deployed: boolean;
-  error?: string;
-}) {
-  if (error)
-    return <span style={{ color: "#ef4444", fontWeight: 600 }}>Error</span>;
+function StatusBadge({ deployed, error }: { deployed: boolean; error?: string }) {
+  if (error) return <span style={{ color: "#ef4444", fontWeight: 600 }}>Error</span>;
   return deployed ? (
     <span style={{ color: "#22c55e", fontWeight: 600 }}>✓ Live</span>
   ) : (
@@ -22,30 +15,20 @@ function StatusBadge({
   );
 }
 
-export default function NetworkComparison({
-  contractId,
-}: {
-  contractId: string;
-}) {
+export default function NetworkComparison({ contractId }: { contractId: string }) {
   const { data, isLoading, error } = useQuery({
     queryKey: ["network-comparison", contractId],
     queryFn: () => api.networkComparison(contractId),
     enabled: !!contractId,
   });
 
-  if (isLoading)
-    return <p style={{ color: "var(--muted)" }}>Checking networks…</p>;
-  if (error)
-    return (
-      <p style={{ color: "#ef4444" }}>Failed to load network comparison.</p>
-    );
+  if (isLoading) return <p style={{ color: "var(--muted)" }}>Checking networks…</p>;
+  if (error) return <p style={{ color: "#ef4444" }}>Failed to load network comparison.</p>;
   if (!data) return null;
 
   return (
     <div className="card">
-      <h3 style={{ marginBottom: 12, fontSize: 14 }}>
-        Network Deployment Status
-      </h3>
+      <h3 style={{ marginBottom: 12, fontSize: 14 }}>Network Deployment Status</h3>
 
       {data.hasVersionMismatch && (
         <div
@@ -59,8 +42,7 @@ export default function NetworkComparison({
             color: "#ef4444",
           }}
         >
-          ⚠ WASM hash mismatch detected across networks — contract versions
-          differ.
+          ⚠ WASM hash mismatch detected across networks — contract versions differ.
         </div>
       )}
 
@@ -81,16 +63,9 @@ export default function NetworkComparison({
           </thead>
           <tbody>
             {data.statuses.map((s) => (
-              <tr
-                key={s.network}
-                style={{ borderBottom: "1px solid var(--border)" }}
-              >
+              <tr key={s.network} style={{ borderBottom: "1px solid var(--border)" }}>
                 <td style={td}>
-                  <span
-                    style={{ textTransform: "capitalize", fontWeight: 500 }}
-                  >
-                    {s.network}
-                  </span>
+                  <span style={{ textTransform: "capitalize", fontWeight: 500 }}>{s.network}</span>
                 </td>
                 <td style={td}>
                   <StatusBadge deployed={s.deployed} error={s.error} />

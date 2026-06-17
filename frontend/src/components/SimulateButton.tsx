@@ -14,11 +14,7 @@ interface Props {
   args?: string; // JSON array string
 }
 
-export default function SimulateButton({
-  contractId,
-  fnName,
-  args = "[]",
-}: Props) {
+export default function SimulateButton({ contractId, fnName, args = "[]" }: Props) {
   const [result, setResult] = useState<SimResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [argsInput, setArgsInput] = useState(args);
@@ -61,11 +57,7 @@ export default function SimulateButton({
           placeholder='Args JSON, e.g. ["GABC...", 100]'
           style={{ flex: 1, minWidth: 200 }}
         />
-        <button
-          onClick={simulate}
-          disabled={loading}
-          style={{ background: "var(--yellow)", color: "#0d1117" }}
-        >
+        <button onClick={simulate} disabled={loading} style={{ background: "var(--yellow)", color: "#0d1117" }}>
           {loading ? "Simulating…" : "⚡ Simulate Call"}
         </button>
       </div>
@@ -94,17 +86,9 @@ export default function SimulateButton({
             >
               {result.success ? "✓ Would succeed" : "✗ Would revert"}
             </span>
-            {result.returnValue && (
-              <code style={{ color: "var(--muted)", fontSize: 12 }}>
-                → {result.returnValue}
-              </code>
-            )}
+            {result.returnValue && <code style={{ color: "var(--muted)", fontSize: 12 }}>→ {result.returnValue}</code>}
           </div>
-          {result.error && (
-            <p style={{ color: "#f85149", fontSize: 12, marginTop: 4 }}>
-              {result.error}
-            </p>
-          )}
+          {result.error && <p style={{ color: "#f85149", fontSize: 12, marginTop: 4 }}>{result.error}</p>}
           {result.cost && (
             <div
               style={{
@@ -115,18 +99,10 @@ export default function SimulateButton({
               }}
             >
               <span>
-                CPU:{" "}
-                <strong style={{ color: "var(--text)" }}>
-                  {result.cost.cpuInsns}
-                </strong>{" "}
-                insns
+                CPU: <strong style={{ color: "var(--text)" }}>{result.cost.cpuInsns}</strong> insns
               </span>
               <span>
-                Mem:{" "}
-                <strong style={{ color: "var(--text)" }}>
-                  {result.cost.memBytes}
-                </strong>{" "}
-                bytes
+                Mem: <strong style={{ color: "var(--text)" }}>{result.cost.memBytes}</strong> bytes
               </span>
             </div>
           )}

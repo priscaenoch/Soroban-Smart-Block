@@ -6,8 +6,7 @@ import type { DecodedEvent } from "../api";
 
 export default function ResourceCosts({ event }: { event: DecodedEvent }) {
   const { cpu_instructions, mem_bytes, fee_charged } = event;
-  if (cpu_instructions == null && mem_bytes == null && fee_charged == null)
-    return null;
+  if (cpu_instructions == null && mem_bytes == null && fee_charged == null) return null;
 
   return (
     <div className="card" style={{ marginTop: 12 }}>
@@ -20,40 +19,16 @@ export default function ResourceCosts({ event }: { event: DecodedEvent }) {
         }}
       >
         {cpu_instructions != null && (
-          <ResourceTile
-            label="CPU Instructions"
-            value={cpu_instructions.toLocaleString()}
-            unit="ops"
-          />
+          <ResourceTile label="CPU Instructions" value={cpu_instructions.toLocaleString()} unit="ops" />
         )}
-        {mem_bytes != null && (
-          <ResourceTile
-            label="Memory"
-            value={mem_bytes.toLocaleString()}
-            unit="bytes"
-          />
-        )}
-        {fee_charged != null && (
-          <ResourceTile
-            label="Fee Charged"
-            value={(fee_charged / 1e7).toFixed(7)}
-            unit="XLM"
-          />
-        )}
+        {mem_bytes != null && <ResourceTile label="Memory" value={mem_bytes.toLocaleString()} unit="bytes" />}
+        {fee_charged != null && <ResourceTile label="Fee Charged" value={(fee_charged / 1e7).toFixed(7)} unit="XLM" />}
       </div>
     </div>
   );
 }
 
-function ResourceTile({
-  label,
-  value,
-  unit,
-}: {
-  label: string;
-  value: string;
-  unit: string;
-}) {
+function ResourceTile({ label, value, unit }: { label: string; value: string; unit: string }) {
   return (
     <div
       style={{

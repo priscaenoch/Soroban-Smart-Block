@@ -25,9 +25,7 @@ export async function getUsdRate(symbol: string): Promise<number | null> {
   if (cached && Date.now() - cached.fetchedAt < TTL_MS) return cached.usd;
 
   try {
-    const res = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`,
-    );
+    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`);
     if (!res.ok) return null;
     const json = await res.json();
     const usd: number = json[coinId]?.usd;
@@ -43,10 +41,7 @@ export async function getUsdRate(symbol: string): Promise<number | null> {
  * Format a fiat value as "~$XX.XX USD".
  * Returns null if the rate is unavailable.
  */
-export async function fiatLabel(
-  amount: number,
-  symbol: string,
-): Promise<string | null> {
+export async function fiatLabel(amount: number, symbol: string): Promise<string | null> {
   const rate = await getUsdRate(symbol);
   if (rate === null) return null;
   const value = amount * rate;

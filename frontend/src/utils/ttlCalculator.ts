@@ -18,8 +18,7 @@ export function calculateTTLMetrics(
   warningThreshold: number = 10000, // ~1.5 days at 6 seconds/block
 ): TTLMetrics {
   const remainingLedgers = Math.max(0, liveUntilLedger - currentLedger);
-  const estimatedTotalLedgers =
-    liveUntilLedger - Math.max(0, currentLedger - 10000);
+  const estimatedTotalLedgers = liveUntilLedger - Math.max(0, currentLedger - 10000);
 
   return {
     liveUntilLedger,
@@ -31,19 +30,14 @@ export function calculateTTLMetrics(
   };
 }
 
-export function getTTLStatus(
-  metrics: TTLMetrics,
-): "healthy" | "warning" | "critical" | "expired" {
+export function getTTLStatus(metrics: TTLMetrics): "healthy" | "warning" | "critical" | "expired" {
   if (metrics.isExpired) return "expired";
   if (metrics.remainingLedgers < 5000) return "critical";
   if (metrics.remainingLedgers < metrics.warningThreshold) return "warning";
   return "healthy";
 }
 
-export function formatTTLTime(
-  ledgers: number,
-  blockTimeSeconds: number = 6,
-): string {
+export function formatTTLTime(ledgers: number, blockTimeSeconds: number = 6): string {
   const seconds = ledgers * blockTimeSeconds;
   const days = Math.floor(seconds / 86400);
   const hours = Math.floor((seconds % 86400) / 3600);

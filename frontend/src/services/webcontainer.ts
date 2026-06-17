@@ -85,10 +85,7 @@ export async function initWebContainer(): Promise<WebContainer> {
   }
 }
 
-export async function mountFiles(
-  container: WebContainer,
-  files: Map<string, SandboxFile>,
-): Promise<void> {
+export async function mountFiles(container: WebContainer, files: Map<string, SandboxFile>): Promise<void> {
   const tree: FileSystemTree = {};
 
   for (const [, file] of files) {

@@ -51,12 +51,10 @@ export default function WasmHashZone() {
       >
         <div style={{ fontSize: 24, marginBottom: 8 }}>🔐</div>
         <p style={{ color: "var(--text)", fontSize: 13, marginBottom: 4 }}>
-          Drop a <code style={{ color: "var(--accent)" }}>.wasm</code> contract
-          binary to compute its SHA-256 deploy hash
+          Drop a <code style={{ color: "var(--accent)" }}>.wasm</code> contract binary to compute its SHA-256 deploy
+          hash
         </p>
-        <p style={{ color: "var(--muted)", fontSize: 12 }}>
-          Computed locally in your browser — no file upload
-        </p>
+        <p style={{ color: "var(--muted)", fontSize: 12 }}>Computed locally in your browser — no file upload</p>
       </div>
       {error && <p style={{ color: "#f85149", fontSize: 12 }}>{error}</p>}
       {hash && (
@@ -68,9 +66,7 @@ export default function WasmHashZone() {
             padding: "10px 14px",
           }}
         >
-          <p style={{ fontSize: 11, color: "var(--muted)", marginBottom: 4 }}>
-            SHA-256 Deploy Hash (32 bytes)
-          </p>
+          <p style={{ fontSize: 11, color: "var(--muted)", marginBottom: 4 }}>SHA-256 Deploy Hash (32 bytes)</p>
           <code
             style={{
               fontSize: 12,

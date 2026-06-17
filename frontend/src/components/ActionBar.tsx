@@ -28,19 +28,11 @@ const ActionBar: React.FC<ActionBarProps> = ({ files, sandboxId }) => {
   return (
     <div className="action-bar">
       <div className="action-group">
-        <button
-          className="action-btn"
-          onClick={handleExport}
-          title="Export as ZIP"
-        >
+        <button className="action-btn" onClick={handleExport} title="Export as ZIP">
           📦 Export
         </button>
         {sandboxId && (
-          <button
-            className="action-btn"
-            onClick={handleShare}
-            title="Copy shareable URL"
-          >
+          <button className="action-btn" onClick={handleShare} title="Copy shareable URL">
             {copied ? "✓ Copied" : "🔗 Share"}
           </button>
         )}

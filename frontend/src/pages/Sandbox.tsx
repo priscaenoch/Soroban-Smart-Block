@@ -6,12 +6,7 @@ import Terminal from "../components/Terminal";
 import Preview from "../components/Preview";
 import ActionBar from "../components/ActionBar";
 import TemplateSelector from "../components/TemplateSelector";
-import {
-  initWebContainer,
-  mountFiles,
-  runCommand,
-  SandboxFile,
-} from "../services/webcontainer";
+import { initWebContainer, mountFiles, runCommand, SandboxFile } from "../services/webcontainer";
 import { getTemplate } from "../services/templates";
 import { generateSandboxId } from "../services/export";
 import { saveSandbox } from "../services/sandbox-api";
@@ -48,12 +43,7 @@ const Sandbox: React.FC = () => {
 
       // Start auto-saver
       if (autoSaverRef.current) autoSaverRef.current();
-      autoSaverRef.current = createAutoSaver(
-        sandboxId,
-        templateId,
-        templateMap,
-        Object.keys(template.files)[0],
-      );
+      autoSaverRef.current = createAutoSaver(sandboxId, templateId, templateMap, Object.keys(template.files)[0]);
 
       // Persist to backend
       await saveSandbox(sandboxId, templateId, templateMap);
@@ -113,10 +103,7 @@ const Sandbox: React.FC = () => {
         setTerminalOutput((prev) => [...prev, line]);
       });
     } catch (error) {
-      setTerminalOutput((prev) => [
-        ...prev,
-        `✗ Error: ${error instanceof Error ? error.message : "Unknown error"}`,
-      ]);
+      setTerminalOutput((prev) => [...prev, `✗ Error: ${error instanceof Error ? error.message : "Unknown error"}`]);
     } finally {
       setIsRunning(false);
     }
@@ -156,11 +143,7 @@ const Sandbox: React.FC = () => {
       <ActionBar files={files} sandboxId={sandboxId} />
 
       <div className="sandbox-layout">
-        <FileExplorer
-          files={Array.from(files.values())}
-          selectedFile={selectedFile}
-          onSelectFile={handleFileSelect}
-        />
+        <FileExplorer files={Array.from(files.values())} selectedFile={selectedFile} onSelectFile={handleFileSelect} />
 
         <div className="editor-section">
           {currentFile ? (
@@ -171,9 +154,7 @@ const Sandbox: React.FC = () => {
         </div>
 
         <div className="right-panel">
-          <Preview
-            packageJsonContent={files.get("package.json")?.content || ""}
-          />
+          <Preview packageJsonContent={files.get("package.json")?.content || ""} />
           <Terminal output={terminalOutput} />
         </div>
       </div>

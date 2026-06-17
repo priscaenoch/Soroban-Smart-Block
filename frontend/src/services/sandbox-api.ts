@@ -63,9 +63,7 @@ export async function listSandboxes(
   sandboxes: Omit<SavedSandbox, "files">[];
   total: number;
 }> {
-  const response = await fetch(
-    `${API_BASE}/api/sandboxes?limit=${limit}&offset=${offset}`,
-  );
+  const response = await fetch(`${API_BASE}/api/sandboxes?limit=${limit}&offset=${offset}`);
 
   if (!response.ok) {
     throw new Error(`Failed to list sandboxes: ${response.statusText}`);

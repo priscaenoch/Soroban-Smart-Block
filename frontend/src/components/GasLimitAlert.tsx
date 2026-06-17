@@ -21,8 +21,7 @@ export function getGasAlert(event: DecodedEvent): GasAlertInfo | null {
   const { cpu_instructions, mem_bytes } = event;
   if (cpu_instructions == null && mem_bytes == null) return null;
 
-  const cpuPct =
-    cpu_instructions != null ? cpu_instructions / MAX_CPU_INSTRUCTIONS : 0;
+  const cpuPct = cpu_instructions != null ? cpu_instructions / MAX_CPU_INSTRUCTIONS : 0;
   const memPct = mem_bytes != null ? mem_bytes / MAX_MEM_BYTES : 0;
   const isHighCpu = cpuPct >= ALERT_THRESHOLD;
   const isHighMem = memPct >= ALERT_THRESHOLD;
@@ -52,12 +51,9 @@ export default function GasLimitAlert({ event }: { event: DecodedEvent }) {
     >
       <span style={{ fontSize: 18 }}>⚠</span>
       <div>
-        <strong style={{ color: "#f59e0b", fontSize: 13 }}>
-          High Gas Usage — Optimization Recommended
-        </strong>
+        <strong style={{ color: "#f59e0b", fontSize: 13 }}>High Gas Usage — Optimization Recommended</strong>
         <p style={{ color: "var(--muted)", fontSize: 12, margin: "4px 0 0" }}>
-          This transaction consumes a high percentage of network limits. Review
-          function efficiency.
+          This transaction consumes a high percentage of network limits. Review function efficiency.
         </p>
         <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
           {isHighCpu && <GasBar label="CPU" pct={cpuPct} />}
@@ -81,9 +77,7 @@ function GasBar({ label, pct }: { label: string; pct: number }) {
         }}
       >
         <span style={{ color: "var(--muted)" }}>{label}</span>
-        <span style={{ color, fontWeight: 600 }}>
-          {(pct * 100).toFixed(1)}%
-        </span>
+        <span style={{ color, fontWeight: 600 }}>{(pct * 100).toFixed(1)}%</span>
       </div>
       <div
         style={{

@@ -4,11 +4,7 @@
  */
 
 import React from "react";
-import {
-  calculateTTLMetrics,
-  getTTLStatus,
-  formatTTLTime,
-} from "../utils/ttlCalculator";
+import { calculateTTLMetrics, getTTLStatus, formatTTLTime } from "../utils/ttlCalculator";
 
 interface TTLStatusIndicatorProps {
   liveUntilLedger: number;
@@ -29,10 +25,7 @@ const statusBgColors = {
   expired: "#f3f4f6",
 };
 
-export default function TTLStatusIndicator({
-  liveUntilLedger,
-  currentLedger,
-}: TTLStatusIndicatorProps) {
+export default function TTLStatusIndicator({ liveUntilLedger, currentLedger }: TTLStatusIndicatorProps) {
   const metrics = calculateTTLMetrics(liveUntilLedger, currentLedger);
   const status = getTTLStatus(metrics);
   const timeRemaining = formatTTLTime(metrics.remainingLedgers);
@@ -84,19 +77,11 @@ export default function TTLStatusIndicator({
       >
         <div>
           <span style={{ color: "#666" }}>Remaining Time:</span>
-          <p
-            style={{ margin: "4px 0 0 0", fontWeight: "600", fontSize: "14px" }}
-          >
-            {timeRemaining}
-          </p>
+          <p style={{ margin: "4px 0 0 0", fontWeight: "600", fontSize: "14px" }}>{timeRemaining}</p>
         </div>
         <div>
           <span style={{ color: "#666" }}>Expires at Ledger:</span>
-          <p
-            style={{ margin: "4px 0 0 0", fontWeight: "600", fontSize: "14px" }}
-          >
-            {liveUntilLedger.toLocaleString()}
-          </p>
+          <p style={{ margin: "4px 0 0 0", fontWeight: "600", fontSize: "14px" }}>{liveUntilLedger.toLocaleString()}</p>
         </div>
       </div>
 

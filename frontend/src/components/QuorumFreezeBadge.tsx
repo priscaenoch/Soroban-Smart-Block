@@ -48,20 +48,17 @@ export default function QuorumFreezeBadge({ contractId }: Props) {
       </div>
 
       <p style={{ fontSize: 12, color: "var(--muted)", margin: 0 }}>
-        This contract has been collectively frozen by network validators during
-        a security incident. All invocations targeting this contract will be
-        rejected with a quarantine error.
+        This contract has been collectively frozen by network validators during a security incident. All invocations
+        targeting this contract will be rejected with a quarantine error.
       </p>
 
       {data.ledger && (
         <div style={{ fontSize: 11, color: "var(--muted)" }}>
-          Freeze enacted at ledger{" "}
-          <strong style={{ color: "var(--text)" }}>{data.ledger}</strong>
+          Freeze enacted at ledger <strong style={{ color: "var(--text)" }}>{data.ledger}</strong>
           {data.tx_hash && (
             <span>
               {" "}
-              · tx{" "}
-              <code style={{ fontSize: 11 }}>{data.tx_hash.slice(0, 12)}…</code>
+              · tx <code style={{ fontSize: 11 }}>{data.tx_hash.slice(0, 12)}…</code>
             </span>
           )}
         </div>
@@ -69,9 +66,7 @@ export default function QuorumFreezeBadge({ contractId }: Props) {
 
       {data.frozen_ids.length > 1 && (
         <details style={{ fontSize: 11, color: "var(--muted)" }}>
-          <summary style={{ cursor: "pointer" }}>
-            {data.frozen_ids.length} frozen keys in this event
-          </summary>
+          <summary style={{ cursor: "pointer" }}>{data.frozen_ids.length} frozen keys in this event</summary>
           <ul
             style={{
               margin: "6px 0 0",

@@ -4,11 +4,7 @@
  */
 
 import React, { useState } from "react";
-import {
-  generateJavaScriptSnippet,
-  generateRustSnippet,
-  generateTypeScriptSnippet,
-} from "../utils/snippetGenerator";
+import { generateJavaScriptSnippet, generateRustSnippet, generateTypeScriptSnippet } from "../utils/snippetGenerator";
 
 interface SDKSnippetGeneratorProps {
   contractId: string;
@@ -18,11 +14,7 @@ interface SDKSnippetGeneratorProps {
 
 type Language = "javascript" | "typescript" | "rust";
 
-export default function SDKSnippetGenerator({
-  contractId,
-  functionName,
-  functionParams,
-}: SDKSnippetGeneratorProps) {
+export default function SDKSnippetGenerator({ contractId, functionName, functionParams }: SDKSnippetGeneratorProps) {
   const [language, setLanguage] = useState<Language>("javascript");
   const [copied, setCopied] = useState(false);
 
@@ -73,8 +65,7 @@ export default function SDKSnippetGenerator({
               onClick={() => setLanguage(lang)}
               style={{
                 padding: "6px 12px",
-                border:
-                  language === lang ? "2px solid #3b82f6" : "1px solid #d1d5db",
+                border: language === lang ? "2px solid #3b82f6" : "1px solid #d1d5db",
                 backgroundColor: language === lang ? "#dbeafe" : "#fff",
                 borderRadius: "4px",
                 cursor: "pointer",

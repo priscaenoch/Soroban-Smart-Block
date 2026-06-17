@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
 
 interface DoctorReport {
-  runtimes: Record<
-    string,
-    { status: string; version?: string; message: string }
-  >;
+  runtimes: Record<string, { status: string; version?: string; message: string }>;
   database: { connected: boolean; message: string };
   env: Record<string, { status: string; value: string; message: string }>;
   ports: Record<string, { status: string; inUse: boolean; message: string }>;
@@ -24,9 +21,7 @@ interface DoctorReport {
 export default function SetupPage() {
   // Form state
   const [rpcUrl, setRpcUrl] = useState("https://soroban-testnet.stellar.org");
-  const [dbUrl, setDbUrl] = useState(
-    "postgres://soroban:soroban_secret@localhost:5432/soroban_explorer",
-  );
+  const [dbUrl, setDbUrl] = useState("postgres://soroban:soroban_secret@localhost:5432/soroban_explorer");
   const [pollMs, setPollMs] = useState("5000");
 
   // Health report state
@@ -175,8 +170,7 @@ export default function SetupPage() {
           <span>🛠️</span> Onboarding Setup & Diagnostics
         </h1>
         <p style={{ color: "var(--muted)" }}>
-          Validate requirements, update environment configurations, connect
-          databases, and seed mock explorer data.
+          Validate requirements, update environment configurations, connect databases, and seed mock explorer data.
         </p>
       </div>
 
@@ -191,10 +185,7 @@ export default function SetupPage() {
         {/* Left Column: Config Panel */}
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           {/* Step 1: Environment Variables */}
-          <div
-            className="card"
-            style={{ display: "flex", flexDirection: "column", gap: 16 }}
-          >
+          <div className="card" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <h3
               style={{
                 fontSize: 16,
@@ -206,11 +197,7 @@ export default function SetupPage() {
             </h3>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <label
-                style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600 }}
-              >
-                SOROBAN_RPC_URL
-              </label>
+              <label style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600 }}>SOROBAN_RPC_URL</label>
               <input
                 id="setup-rpc-url"
                 value={rpcUrl}
@@ -220,11 +207,7 @@ export default function SetupPage() {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <label
-                style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600 }}
-              >
-                DATABASE_URL
-              </label>
+              <label style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600 }}>DATABASE_URL</label>
               <input
                 id="setup-db-url"
                 value={dbUrl}
@@ -234,11 +217,7 @@ export default function SetupPage() {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <label
-                style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600 }}
-              >
-                POLL_MS
-              </label>
+              <label style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600 }}>POLL_MS</label>
               <input
                 id="setup-poll-ms"
                 type="number"
@@ -304,10 +283,7 @@ export default function SetupPage() {
           </div>
 
           {/* Step 2: Database setup & seed */}
-          <div
-            className="card"
-            style={{ display: "flex", flexDirection: "column", gap: 16 }}
-          >
+          <div className="card" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <h3
               style={{
                 fontSize: 16,
@@ -318,8 +294,8 @@ export default function SetupPage() {
               [2/3] Database Seeding & Schema Setup
             </h3>
             <p style={{ fontSize: 13, color: "var(--muted)" }}>
-              Initialize database schema, apply table migrations, and populate
-              mock transaction history (500+ events, 20 contracts).
+              Initialize database schema, apply table migrations, and populate mock transaction history (500+ events, 20
+              contracts).
             </p>
 
             <div>
@@ -333,9 +309,7 @@ export default function SetupPage() {
                   fontWeight: 700,
                 }}
               >
-                {initializingDb
-                  ? "Initializing & Seeding..."
-                  : "⚡ Initialize & Seed Database"}
+                {initializingDb ? "Initializing & Seeding..." : "⚡ Initialize & Seed Database"}
               </button>
             </div>
 
@@ -358,10 +332,7 @@ export default function SetupPage() {
           </div>
 
           {/* Step 3: Local Dev info */}
-          <div
-            className="card"
-            style={{ display: "flex", flexDirection: "column", gap: 12 }}
-          >
+          <div className="card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <h3
               style={{
                 fontSize: 16,
@@ -372,8 +343,7 @@ export default function SetupPage() {
               [3/3] Start Local Server
             </h3>
             <p style={{ fontSize: 13, color: "var(--muted)" }}>
-              After completing the steps above, start both the API indexer
-              daemon and frontend Vite server:
+              After completing the steps above, start both the API indexer daemon and frontend Vite server:
             </p>
             <div
               style={{
@@ -398,10 +368,7 @@ export default function SetupPage() {
         </div>
 
         {/* Right Column: Health Diagnostics Dashboard */}
-        <div
-          className="card"
-          style={{ display: "flex", flexDirection: "column", gap: 16 }}
-        >
+        <div className="card" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div
             style={{
               display: "flex",
@@ -436,9 +403,7 @@ export default function SetupPage() {
               Loading system diagnostic report…
             </p>
           ) : doctorError ? (
-            <p style={{ color: "#f85149", textAlign: "center", padding: 24 }}>
-              {doctorError}
-            </p>
+            <p style={{ color: "#f85149", textAlign: "center", padding: 24 }}>{doctorError}</p>
           ) : report ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {/* Runtimes */}
@@ -453,9 +418,7 @@ export default function SetupPage() {
                 >
                   Runtimes
                 </h4>
-                <div
-                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
-                >
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {Object.entries(report.runtimes).map(([key, check]) => (
                     <div
                       key={key}
@@ -466,11 +429,7 @@ export default function SetupPage() {
                         fontSize: 13,
                       }}
                     >
-                      <span
-                        style={{ textTransform: "capitalize", fontWeight: 500 }}
-                      >
-                        {key}
-                      </span>
+                      <span style={{ textTransform: "capitalize", fontWeight: 500 }}>{key}</span>
                       <div
                         style={{
                           display: "flex",
@@ -478,14 +437,8 @@ export default function SetupPage() {
                           gap: 8,
                         }}
                       >
-                        {check.version && (
-                          <span style={{ color: "var(--muted)", fontSize: 12 }}>
-                            {check.version}
-                          </span>
-                        )}
-                        <span className={getBadgeClass(check.status)}>
-                          {getStatusText(check.status)}
-                        </span>
+                        {check.version && <span style={{ color: "var(--muted)", fontSize: 12 }}>{check.version}</span>}
+                        <span className={getBadgeClass(check.status)}>{getStatusText(check.status)}</span>
                       </div>
                     </div>
                   ))}
@@ -493,9 +446,7 @@ export default function SetupPage() {
               </div>
 
               {/* Database Status */}
-              <div
-                style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}
-              >
+              <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
                 <h4
                   style={{
                     fontSize: 13,
@@ -515,27 +466,15 @@ export default function SetupPage() {
                   }}
                 >
                   <span>PostgreSQL Connectivity</span>
-                  <span
-                    className={getBadgeClass(
-                      report.database.connected ? "pass" : "fail",
-                    )}
-                  >
-                    {report.database.connected
-                      ? "✓ Connected"
-                      : "✗ Disconnected"}
+                  <span className={getBadgeClass(report.database.connected ? "pass" : "fail")}>
+                    {report.database.connected ? "✓ Connected" : "✗ Disconnected"}
                   </span>
                 </div>
-                <p
-                  style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}
-                >
-                  {report.database.message}
-                </p>
+                <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>{report.database.message}</p>
               </div>
 
               {/* Ports */}
-              <div
-                style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}
-              >
+              <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
                 <h4
                   style={{
                     fontSize: 13,
@@ -546,9 +485,7 @@ export default function SetupPage() {
                 >
                   Ports Status
                 </h4>
-                <div
-                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
-                >
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {Object.entries(report.ports).map(([port, check]) => (
                     <div
                       key={port}
@@ -560,18 +497,14 @@ export default function SetupPage() {
                       }}
                     >
                       <span>Port {port}</span>
-                      <span className={getBadgeClass(check.status)}>
-                        {check.message}
-                      </span>
+                      <span className={getBadgeClass(check.status)}>{check.message}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* System Stats */}
-              <div
-                style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}
-              >
+              <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
                 <h4
                   style={{
                     fontSize: 13,
@@ -582,9 +515,7 @@ export default function SetupPage() {
                 >
                   System Resources
                 </h4>
-                <div
-                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
-                >
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   <div
                     style={{
                       display: "flex",
@@ -595,9 +526,7 @@ export default function SetupPage() {
                   >
                     <span>Disk Space</span>
                     <span className={getBadgeClass(report.system.disk.status)}>
-                      {report.system.disk.status === "pass"
-                        ? "✓ OK"
-                        : "⚠ Low Space"}
+                      {report.system.disk.status === "pass" ? "✓ OK" : "⚠ Low Space"}
                     </span>
                   </div>
                   <p
@@ -619,12 +548,8 @@ export default function SetupPage() {
                     }}
                   >
                     <span>System Memory</span>
-                    <span
-                      className={getBadgeClass(report.system.memory.status)}
-                    >
-                      {report.system.memory.status === "pass"
-                        ? "✓ OK"
-                        : "⚠ Low Memory"}
+                    <span className={getBadgeClass(report.system.memory.status)}>
+                      {report.system.memory.status === "pass" ? "✓ OK" : "⚠ Low Memory"}
                     </span>
                   </div>
                   <p
@@ -661,9 +586,7 @@ export default function SetupPage() {
                     Git Hooks
                   </h4>
                   <span className={getBadgeClass(report.gitHooks.status)}>
-                    {report.gitHooks.status === "pass"
-                      ? "✓ Installed"
-                      : "⚠ Missing Hooks"}
+                    {report.gitHooks.status === "pass" ? "✓ Installed" : "⚠ Missing Hooks"}
                   </span>
                 </div>
                 <div>
@@ -678,9 +601,7 @@ export default function SetupPage() {
                     Docker Environment
                   </h4>
                   <span className={getBadgeClass(report.docker.status)}>
-                    {report.docker.status === "pass"
-                      ? "✓ Available"
-                      : "⚠ Not Available"}
+                    {report.docker.status === "pass" ? "✓ Available" : "⚠ Not Available"}
                   </span>
                 </div>
               </div>

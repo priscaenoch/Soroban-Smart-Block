@@ -59,18 +59,10 @@ function formatLedgers(ledgers: number): string {
   return `~${Math.round(seconds / 86400)}d`;
 }
 
-export default function ArchivedKeysTab({
-  entries,
-  stats,
-  currentLedger,
-}: Props) {
-  const [filter, setFilter] = useState<"all" | "evicted" | "expiring_soon">(
-    "evicted",
-  );
+export default function ArchivedKeysTab({ entries, stats, currentLedger }: Props) {
+  const [filter, setFilter] = useState<"all" | "evicted" | "expiring_soon">("evicted");
 
-  const visible = entries.filter((e) =>
-    filter === "all" ? true : e.state === filter,
-  );
+  const visible = entries.filter((e) => (filter === "all" ? true : e.state === filter));
 
   return (
     <div>
@@ -120,15 +112,14 @@ export default function ArchivedKeysTab({
         >
           <span style={{ color: "#f85149", fontWeight: 700 }}>⚠</span>
           <span style={{ color: "var(--muted)" }}>
-            Estimated total <code>RestoreFootprintOp</code> cost to revive all{" "}
-            {stats.evicted} evicted {stats.evicted === 1 ? "key" : "keys"}:
+            Estimated total <code>RestoreFootprintOp</code> cost to revive all {stats.evicted} evicted{" "}
+            {stats.evicted === 1 ? "key" : "keys"}:
           </span>
           <span style={{ fontWeight: 700, color: "#f85149" }}>
             {stroopsToXlm(stats.totalEstimatedRestoreFeeStroops)}
           </span>
           <span style={{ color: "var(--muted)", fontSize: 11 }}>
-            ({stats.totalEstimatedRestoreFeeStroops.toLocaleString()} stroops,
-            estimated)
+            ({stats.totalEstimatedRestoreFeeStroops.toLocaleString()} stroops, estimated)
           </span>
         </div>
       )}
@@ -147,8 +138,7 @@ export default function ArchivedKeysTab({
             key={f}
             onClick={() => setFilter(f)}
             style={{
-              background:
-                filter === f ? "var(--accent, #58a6ff)" : "transparent",
+              background: filter === f ? "var(--accent, #58a6ff)" : "transparent",
               color: filter === f ? "#fff" : "var(--muted)",
               border: "1px solid var(--border)",
               borderRadius: 4,
@@ -177,15 +167,11 @@ export default function ArchivedKeysTab({
             fontSize: 13,
           }}
         >
-          {filter === "evicted"
-            ? "No evicted keys found for this contract."
-            : "No entries match the selected filter."}
+          {filter === "evicted" ? "No evicted keys found for this contract." : "No entries match the selected filter."}
         </div>
       ) : (
         <div style={{ overflowX: "auto" }}>
-          <table
-            style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}
-          >
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead>
               <tr
                 style={{
@@ -207,27 +193,16 @@ export default function ArchivedKeysTab({
                   key={i}
                   style={{
                     borderBottom: "1px solid var(--border)",
-                    background:
-                      entry.state === "evicted"
-                        ? "rgba(248,81,73,0.04)"
-                        : "transparent",
+                    background: entry.state === "evicted" ? "rgba(248,81,73,0.04)" : "transparent",
                   }}
                 >
                   <td style={{ ...td, fontFamily: "monospace" }}>
-                    <code title={entry.key}>
-                      {entry.key.length > 32
-                        ? `${entry.key.slice(0, 32)}…`
-                        : entry.key}
-                    </code>
+                    <code title={entry.key}>{entry.key.length > 32 ? `${entry.key.slice(0, 32)}…` : entry.key}</code>
                   </td>
                   <td style={td}>
-                    <span style={{ fontSize: 11, color: "var(--muted)" }}>
-                      {entry.durability}
-                    </span>
+                    <span style={{ fontSize: 11, color: "var(--muted)" }}>{entry.durability}</span>
                   </td>
-                  <td style={{ ...td, fontFamily: "monospace" }}>
-                    {entry.liveUntilLedger.toLocaleString()}
-                  </td>
+                  <td style={{ ...td, fontFamily: "monospace" }}>{entry.liveUntilLedger.toLocaleString()}</td>
                   <td style={td}>
                     <span
                       style={{
@@ -249,9 +224,7 @@ export default function ArchivedKeysTab({
                     }}
                   >
                     {entry.state === "evicted" ? (
-                      <span style={{ color: "#f85149", fontWeight: 600 }}>
-                        Archived off-chain
-                      </span>
+                      <span style={{ color: "#f85149", fontWeight: 600 }}>Archived off-chain</span>
                     ) : (
                       formatLedgers(entry.ledgersUntilEviction)
                     )}
@@ -287,8 +260,8 @@ export default function ArchivedKeysTab({
           borderTop: "1px solid var(--border)",
         }}
       >
-        Current ledger: {currentLedger.toLocaleString()} · Restore fee estimates
-        assume 120,960-ledger extension (~1 week)
+        Current ledger: {currentLedger.toLocaleString()} · Restore fee estimates assume 120,960-ledger extension (~1
+        week)
       </div>
     </div>
   );

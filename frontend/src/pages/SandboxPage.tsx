@@ -1,12 +1,5 @@
 import { useState } from "react";
-import {
-  xdr,
-  StrKey,
-  TransactionBuilder,
-  Networks,
-  Contract,
-  Account,
-} from "@stellar/stellar-sdk";
+import { xdr, StrKey, TransactionBuilder, Networks, Contract, Account } from "@stellar/stellar-sdk";
 
 interface ParsedInvocation {
   contractId: string;
@@ -41,12 +34,9 @@ function parseEnvelope(b64: string): ParsedInvocation {
     const body = op.body();
     if (body.switch().name !== "invokeHostFunction") continue;
     const hf = (body as any).invokeHostFunction().hostFunction();
-    if (hf.switch() !== xdr.HostFunctionType.hostFunctionTypeInvokeContract())
-      continue;
+    if (hf.switch() !== xdr.HostFunctionType.hostFunctionTypeInvokeContract()) continue;
     const inv = hf.invokeContract();
-    const contractId = StrKey.encodeContract(
-      inv.contractAddress().contractId(),
-    );
+    const contractId = StrKey.encodeContract(inv.contractAddress().contractId());
     const fnName = inv.functionName().toString();
     const args = inv.args().map((a: xdr.ScVal) => a.toXDR("base64"));
     return {
@@ -137,8 +127,7 @@ export default function SandboxPage() {
       <div className="card">
         <h2 style={{ marginBottom: 8 }}>XDR Sandbox</h2>
         <p style={{ color: "var(--muted)", fontSize: 13, marginBottom: 12 }}>
-          Paste a raw Base64 TransactionEnvelope, edit its arguments, then
-          simulate the modified call.
+          Paste a raw Base64 TransactionEnvelope, edit its arguments, then simulate the modified call.
         </p>
         <textarea
           value={rawXdr}
@@ -168,11 +157,7 @@ export default function SandboxPage() {
         >
           Decode XDR
         </button>
-        {parseError && (
-          <p style={{ color: "#f85149", fontSize: 13, marginTop: 8 }}>
-            {parseError}
-          </p>
-        )}
+        {parseError && <p style={{ color: "#f85149", fontSize: 13, marginTop: 8 }}>{parseError}</p>}
       </div>
 
       {/* Step 2 — edit args */}
@@ -180,22 +165,14 @@ export default function SandboxPage() {
         <div className="card">
           <div style={{ marginBottom: 12 }}>
             <span className="badge">{parsed.contractId.slice(0, 8)}…</span>
-            <span
-              style={{ marginLeft: 8, fontWeight: 600, color: "var(--green)" }}
-            >
-              {parsed.fnName}
-            </span>
-            <span
-              style={{ marginLeft: 8, fontSize: 12, color: "var(--muted)" }}
-            >
+            <span style={{ marginLeft: 8, fontWeight: 600, color: "var(--green)" }}>{parsed.fnName}</span>
+            <span style={{ marginLeft: 8, fontSize: 12, color: "var(--muted)" }}>
               {parsed.args.length} arg{parsed.args.length !== 1 ? "s" : ""}
             </span>
           </div>
 
           {editedArgs.length === 0 && (
-            <p style={{ color: "var(--muted)", fontSize: 13 }}>
-              This function takes no arguments.
-            </p>
+            <p style={{ color: "var(--muted)", fontSize: 13 }}>This function takes no arguments.</p>
           )}
 
           {editedArgs.map((arg, i) => (
@@ -245,10 +222,7 @@ export default function SandboxPage() {
 
       {/* Step 3 — result */}
       {result && (
-        <div
-          className="card"
-          style={{ borderColor: result.success ? "var(--green)" : "#f85149" }}
-        >
+        <div className="card" style={{ borderColor: result.success ? "var(--green)" : "#f85149" }}>
           <div
             style={{
               display: "flex",
@@ -266,23 +240,15 @@ export default function SandboxPage() {
               {result.success ? "✓ Would succeed" : "✗ Would revert"}
             </span>
             {result.latestLedger != null && (
-              <span style={{ fontSize: 12, color: "var(--muted)" }}>
-                ledger #{result.latestLedger}
-              </span>
+              <span style={{ fontSize: 12, color: "var(--muted)" }}>ledger #{result.latestLedger}</span>
             )}
           </div>
 
-          {result.error && (
-            <p style={{ color: "#f85149", fontSize: 13, marginBottom: 8 }}>
-              {result.error}
-            </p>
-          )}
+          {result.error && <p style={{ color: "#f85149", fontSize: 13, marginBottom: 8 }}>{result.error}</p>}
 
           {result.returnValue && (
             <div style={{ marginBottom: 8 }}>
-              <span style={{ fontSize: 12, color: "var(--muted)" }}>
-                Return value (XDR):{" "}
-              </span>
+              <span style={{ fontSize: 12, color: "var(--muted)" }}>Return value (XDR): </span>
               <code
                 style={{
                   fontSize: 12,
@@ -298,26 +264,14 @@ export default function SandboxPage() {
           {result.cost && (
             <div style={{ display: "flex", gap: 24, fontSize: 13 }}>
               <span>
-                CPU:{" "}
-                <strong style={{ color: "var(--text)" }}>
-                  {result.cost.cpuInsns}
-                </strong>{" "}
-                insns
+                CPU: <strong style={{ color: "var(--text)" }}>{result.cost.cpuInsns}</strong> insns
               </span>
               <span>
-                Mem:{" "}
-                <strong style={{ color: "var(--text)" }}>
-                  {result.cost.memBytes}
-                </strong>{" "}
-                bytes
+                Mem: <strong style={{ color: "var(--text)" }}>{result.cost.memBytes}</strong> bytes
               </span>
               {result.minResourceFee != null && (
                 <span>
-                  Min fee:{" "}
-                  <strong style={{ color: "var(--text)" }}>
-                    {result.minResourceFee}
-                  </strong>{" "}
-                  stroops
+                  Min fee: <strong style={{ color: "var(--text)" }}>{result.minResourceFee}</strong> stroops
                 </span>
               )}
             </div>

@@ -48,9 +48,7 @@ function Bar({ label, liveUntilLedger, currentLedger }: BarProps) {
           <span>{label}</span>
           <span>unavailable</span>
         </div>
-        <div
-          style={{ height: 6, background: "var(--border)", borderRadius: 3 }}
-        />
+        <div style={{ height: 6, background: "var(--border)", borderRadius: 3 }} />
       </div>
     );
   }
@@ -74,9 +72,7 @@ function Bar({ label, liveUntilLedger, currentLedger }: BarProps) {
       >
         <span style={{ color: "var(--muted)" }}>{label}</span>
         <span style={{ color, fontWeight: 600 }}>
-          {isExpired
-            ? "Expired"
-            : `${remaining.toLocaleString()} ledgers · ${formatRemaining(remaining)}`}
+          {isExpired ? "Expired" : `${remaining.toLocaleString()} ledgers · ${formatRemaining(remaining)}`}
         </span>
       </div>
       <div
@@ -121,16 +117,11 @@ export default function TTLProgressBar({ contractId }: TTLProgressBarProps) {
     enabled: !!contractId,
   });
 
-  if (isLoading)
-    return <p style={{ color: "var(--muted)", fontSize: 13 }}>Loading TTL…</p>;
+  if (isLoading) return <p style={{ color: "var(--muted)", fontSize: 13 }}>Loading TTL…</p>;
   if (isError || !data) return null;
 
   return (
-    <div
-      className="card"
-      style={{ padding: "14px 16px" }}
-      aria-label="Contract TTL status"
-    >
+    <div className="card" style={{ padding: "14px 16px" }} aria-label="Contract TTL status">
       <h3
         style={{
           fontSize: 13,
@@ -142,19 +133,10 @@ export default function TTLProgressBar({ contractId }: TTLProgressBarProps) {
       >
         TTL / Expiration
       </h3>
-      <Bar
-        label="Instance"
-        liveUntilLedger={data.instance.live_until_ledger}
-        currentLedger={data.current_ledger}
-      />
-      <Bar
-        label="Code (WASM)"
-        liveUntilLedger={data.code.live_until_ledger}
-        currentLedger={data.current_ledger}
-      />
+      <Bar label="Instance" liveUntilLedger={data.instance.live_until_ledger} currentLedger={data.current_ledger} />
+      <Bar label="Code (WASM)" liveUntilLedger={data.code.live_until_ledger} currentLedger={data.current_ledger} />
       <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>
-        Current ledger: {data.current_ledger.toLocaleString()} · ~
-        {SECS_PER_LEDGER}s per ledger
+        Current ledger: {data.current_ledger.toLocaleString()} · ~{SECS_PER_LEDGER}s per ledger
       </div>
     </div>
   );

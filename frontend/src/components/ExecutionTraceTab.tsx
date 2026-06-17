@@ -69,13 +69,7 @@ function Badge({ kind }: { kind: string }) {
   );
 }
 
-function TraceNodeRow({
-  node,
-  depth = 0,
-}: {
-  node: TraceNode;
-  depth?: number;
-}) {
+function TraceNodeRow({ node, depth = 0 }: { node: TraceNode; depth?: number }) {
   const [expanded, setExpanded] = useState(depth < 2);
   const hasChildren = node.children && node.children.length > 0;
   const indent = depth * 20;
@@ -91,8 +85,7 @@ function TraceNodeRow({
           paddingLeft: 8 + indent,
           cursor: hasChildren ? "pointer" : "default",
           borderBottom: "1px solid var(--border)",
-          background:
-            node.kind === "trap" ? "rgba(248,81,73,0.08)" : "transparent",
+          background: node.kind === "trap" ? "rgba(248,81,73,0.08)" : "transparent",
           gap: 6,
         }}
       >
@@ -144,26 +137,20 @@ function TraceNodeRow({
               flexShrink: 0,
             }}
           >
-            {Number(node.cpuCost ?? node.cpuInstructions).toLocaleString()} CPU
-            insns
+            {Number(node.cpuCost ?? node.cpuInstructions).toLocaleString()} CPU insns
           </span>
         )}
       </div>
 
       {expanded &&
         hasChildren &&
-        node.children.map((child, i) => (
-          <TraceNodeRow key={i} node={child} depth={depth + 1} />
-        ))}
+        node.children.map((child, i) => <TraceNodeRow key={i} node={child} depth={depth + 1} />)}
     </div>
   );
 }
 
 export default function ExecutionTraceTab({ trace }: Props) {
-  if (
-    !trace ||
-    (trace.callTree.length === 0 && trace.flatEvents.length === 0)
-  ) {
+  if (!trace || (trace.callTree.length === 0 && trace.flatEvents.length === 0)) {
     return (
       <div
         style={{
@@ -178,8 +165,7 @@ export default function ExecutionTraceTab({ trace }: Props) {
     );
   }
 
-  const treeToRender =
-    trace.callTree.length > 0 ? trace.callTree : trace.flatEvents;
+  const treeToRender = trace.callTree.length > 0 ? trace.callTree : trace.flatEvents;
 
   return (
     <div>
@@ -213,12 +199,8 @@ export default function ExecutionTraceTab({ trace }: Props) {
         )}
 
         {trace.totalCpuInstructions != null && (
-          <span
-            style={{ marginLeft: "auto", fontSize: 12, color: "var(--muted)" }}
-          >
-            Total CPU:{" "}
-            <strong>{trace.totalCpuInstructions.toLocaleString()}</strong>{" "}
-            instructions
+          <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--muted)" }}>
+            Total CPU: <strong>{trace.totalCpuInstructions.toLocaleString()}</strong> instructions
           </span>
         )}
       </div>

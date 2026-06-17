@@ -1,10 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
-import StructuredValue, {
-  buildTypeIndex,
-  type TypeIndex,
-} from "./StructuredValue";
+import StructuredValue, { buildTypeIndex, type TypeIndex } from "./StructuredValue";
 
 interface Param {
   name: string;
@@ -26,15 +23,7 @@ interface Props {
 
 function inputType(sorobanType: string): string {
   const t = sorobanType.toLowerCase();
-  if (
-    t.includes("int") ||
-    t === "u32" ||
-    t === "i32" ||
-    t === "u64" ||
-    t === "i64" ||
-    t === "u128" ||
-    t === "i128"
-  )
+  if (t.includes("int") || t === "u32" || t === "i32" || t === "u64" || t === "i64" || t === "u128" || t === "i128")
     return "number";
   if (t === "bool") return "checkbox";
   return "text";
@@ -66,9 +55,7 @@ export default function ReadContract({ functions, contractId }: Props) {
     retry: false,
   });
 
-  const typeIndex: TypeIndex = fullSpec?.types
-    ? buildTypeIndex(fullSpec.types)
-    : new Map();
+  const typeIndex: TypeIndex = fullSpec?.types ? buildTypeIndex(fullSpec.types) : new Map();
 
   // Find the return type of the selected function from the full spec
   const specFn = fullSpec?.functions.find((f) => f.name === selected);
@@ -108,17 +95,10 @@ export default function ReadContract({ functions, contractId }: Props) {
   if (readFns.length === 0) return null;
 
   return (
-    <div
-      className="card"
-      style={{ display: "flex", flexDirection: "column", gap: 12 }}
-    >
+    <div className="card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <h3 style={{ fontSize: 14 }}>Read Contract</h3>
 
-      <select
-        value={selected}
-        onChange={(e) => handleSelect(e.target.value)}
-        style={{ width: "100%" }}
-      >
+      <select value={selected} onChange={(e) => handleSelect(e.target.value)} style={{ width: "100%" }}>
         {readFns.map((f) => (
           <option key={f.name} value={f.name}>
             {f.name}
@@ -129,13 +109,9 @@ export default function ReadContract({ functions, contractId }: Props) {
       {fn?.params && fn.params.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {fn.params.map((p) => (
-            <div
-              key={p.name}
-              style={{ display: "flex", flexDirection: "column", gap: 4 }}
-            >
+            <div key={p.name} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               <label style={{ fontSize: 12, color: "var(--muted)" }}>
-                {p.name}{" "}
-                <span style={{ color: "var(--accent)" }}>({p.type})</span>
+                {p.name} <span style={{ color: "var(--accent)" }}>({p.type})</span>
               </label>
               {inputType(p.type) === "checkbox" ? (
                 <input
@@ -153,9 +129,7 @@ export default function ReadContract({ functions, contractId }: Props) {
                   type={inputType(p.type)}
                   placeholder={placeholder(p)}
                   value={args[p.name] ?? ""}
-                  onChange={(e) =>
-                    setArgs((a) => ({ ...a, [p.name]: e.target.value }))
-                  }
+                  onChange={(e) => setArgs((a) => ({ ...a, [p.name]: e.target.value }))}
                   style={{ width: "100%" }}
                 />
               )}
@@ -164,11 +138,7 @@ export default function ReadContract({ functions, contractId }: Props) {
         </div>
       )}
 
-      <button
-        onClick={handleCall}
-        disabled={loading}
-        style={{ alignSelf: "flex-start" }}
-      >
+      <button onClick={handleCall} disabled={loading} style={{ alignSelf: "flex-start" }}>
         {loading ? "Calling…" : "Call"}
       </button>
 
@@ -187,12 +157,7 @@ export default function ReadContract({ functions, contractId }: Props) {
         >
           {/* Use StructuredValue when we have type info, otherwise fall back to JSON */}
           {returnType && typeIndex.has(returnType) ? (
-            <StructuredValue
-              value={result}
-              typeHint={returnType}
-              typeIndex={typeIndex}
-              label={returnType}
-            />
+            <StructuredValue value={result} typeHint={returnType} typeIndex={typeIndex} label={returnType} />
           ) : (
             <pre
               style={{
@@ -201,11 +166,7 @@ export default function ReadContract({ functions, contractId }: Props) {
                 wordBreak: "break-all",
               }}
             >
-              {JSON.stringify(
-                result,
-                (_k, v) => (typeof v === "bigint" ? v.toString() : v),
-                2,
-              )}
+              {JSON.stringify(result, (_k, v) => (typeof v === "bigint" ? v.toString() : v), 2)}
             </pre>
           )}
         </div>

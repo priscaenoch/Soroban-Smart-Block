@@ -37,11 +37,7 @@ export function buildTypeIndex(types: SpecType[]): TypeIndex {
  *
  * This function re-annotates them using the type definitions.
  */
-export function annotateValue(
-  value: unknown,
-  typeHint: string | null | undefined,
-  typeIndex: TypeIndex,
-): unknown {
+export function annotateValue(value: unknown, typeHint: string | null | undefined, typeIndex: TypeIndex): unknown {
   if (value === null || value === undefined) return value;
   if (!typeHint || typeIndex.size === 0) return value;
 
@@ -68,11 +64,7 @@ export function annotateValue(
     }
 
     // Tuple struct: arrives as an array — map positionally to field names
-    if (
-      Array.isArray(value) &&
-      fields.length > 0 &&
-      value.length === fields.length
-    ) {
+    if (Array.isArray(value) && fields.length > 0 && value.length === fields.length) {
       const result: Record<string, unknown> = {};
       fields.forEach((field, i) => {
         result[field.name] = annotateValue(value[i], field.type, typeIndex);
@@ -109,17 +101,12 @@ export function annotateValue(
         return { _type: typeHint, variant: tag };
       }
 
-      const annotatedPayload = payloadItems.map((item, i) =>
-        annotateValue(item, payloadTypes[i] ?? null, typeIndex),
-      );
+      const annotatedPayload = payloadItems.map((item, i) => annotateValue(item, payloadTypes[i] ?? null, typeIndex));
 
       return {
         _type: typeHint,
         variant: tag,
-        data:
-          annotatedPayload.length === 1
-            ? annotatedPayload[0]
-            : annotatedPayload,
+        data: annotatedPayload.length === 1 ? annotatedPayload[0] : annotatedPayload,
       };
     }
 
@@ -167,9 +154,7 @@ export default function StructuredValue({
 }: StructuredValueProps) {
   const annotated = annotateValue(value, typeHint ?? null, typeIndex);
   return (
-    <div
-      style={{ fontFamily: "monospace", fontSize: "0.85em", lineHeight: 1.6 }}
-    >
+    <div style={{ fontFamily: "monospace", fontSize: "0.85em", lineHeight: 1.6 }}>
       <ValueNode value={annotated} name={label} isRoot />
     </div>
   );
@@ -201,9 +186,7 @@ function ValueNode({ name, value, isRoot = false }: ValueNodeProps) {
     return (
       <div>
         <span style={{ color: "var(--muted, #888)" }}>{name}:</span>{" "}
-        <span style={{ color: "var(--green, #3fb950)" }}>
-          "{value as string}"
-        </span>
+        <span style={{ color: "var(--green, #3fb950)" }}>"{value as string}"</span>
       </div>
     );
   }
@@ -235,9 +218,7 @@ function ValueNode({ name, value, isRoot = false }: ValueNodeProps) {
       );
     }
     // Render fixed-size tuples of primitives inline: [100, 250]
-    const allPrimitive = value.every(
-      (v) => v !== null && typeof v !== "object",
-    );
+    const allPrimitive = value.every((v) => v !== null && typeof v !== "object");
     if (allPrimitive) {
       return (
         <div>
@@ -248,13 +229,8 @@ function ValueNode({ name, value, isRoot = false }: ValueNodeProps) {
     }
     return (
       <div>
-        <div
-          onClick={() => setExpanded((e) => !e)}
-          style={{ cursor: "pointer", userSelect: "none" }}
-        >
-          <span style={{ marginRight: 4, color: "var(--accent, #58a6ff)" }}>
-            {expanded ? "▼" : "▶"}
-          </span>
+        <div onClick={() => setExpanded((e) => !e)} style={{ cursor: "pointer", userSelect: "none" }}>
+          <span style={{ marginRight: 4, color: "var(--accent, #58a6ff)" }}>{expanded ? "▼" : "▶"}</span>
           <span style={{ color: "var(--muted, #888)" }}>{name}:</span>{" "}
           <span style={{ color: "var(--muted, #888)" }}>[{value.length}]</span>
         </div>
@@ -295,20 +271,12 @@ function ValueNode({ name, value, isRoot = false }: ValueNodeProps) {
               userSelect: "none",
             }}
           >
-            {hasData && (
-              <span style={{ marginRight: 4, color: "var(--accent, #58a6ff)" }}>
-                {expanded ? "▼" : "▶"}
-              </span>
-            )}
+            {hasData && <span style={{ marginRight: 4, color: "var(--accent, #58a6ff)" }}>{expanded ? "▼" : "▶"}</span>}
             <span style={{ color: "var(--muted, #888)" }}>{name}:</span>{" "}
             <span style={{ color: variantColor }}>
               {isError ? `Error::${obj.error}` : `${obj._type}::${obj.variant}`}
             </span>
-            {hasValue && (
-              <span style={{ color: "#79c0ff", marginLeft: 6 }}>
-                ({String(obj.value ?? obj.code)})
-              </span>
-            )}
+            {hasValue && <span style={{ color: "#79c0ff", marginLeft: 6 }}>({String(obj.value ?? obj.code)})</span>}
           </div>
           {hasData && expanded && (
             <div
@@ -335,13 +303,8 @@ function ValueNode({ name, value, isRoot = false }: ValueNodeProps) {
 
     return (
       <div>
-        <div
-          onClick={() => setExpanded((e) => !e)}
-          style={{ cursor: "pointer", userSelect: "none" }}
-        >
-          <span style={{ marginRight: 4, color: "var(--accent, #58a6ff)" }}>
-            {expanded ? "▼" : "▶"}
-          </span>
+        <div onClick={() => setExpanded((e) => !e)} style={{ cursor: "pointer", userSelect: "none" }}>
+          <span style={{ marginRight: 4, color: "var(--accent, #58a6ff)" }}>{expanded ? "▼" : "▶"}</span>
           <span style={{ color: "var(--muted, #888)" }}>{name}:</span>{" "}
           <span style={{ color: "var(--muted, #888)" }}>
             {"{"}…{"}"}
@@ -366,8 +329,7 @@ function ValueNode({ name, value, isRoot = false }: ValueNodeProps) {
 
   return (
     <div>
-      <span style={{ color: "var(--muted, #888)" }}>{name}:</span>{" "}
-      {String(value)}
+      <span style={{ color: "var(--muted, #888)" }}>{name}:</span> {String(value)}
     </div>
   );
 }
@@ -378,8 +340,5 @@ function depth(val: unknown): number {
   if (Array.isArray(val)) return 1 + Math.max(0, ...val.map(depth));
   const keys = Object.keys(val as object);
   if (keys.length === 0) return 0;
-  return (
-    1 +
-    Math.max(0, ...keys.map((k) => depth((val as Record<string, unknown>)[k])))
-  );
+  return 1 + Math.max(0, ...keys.map((k) => depth((val as Record<string, unknown>)[k])));
 }

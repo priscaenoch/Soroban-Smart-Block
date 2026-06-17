@@ -102,9 +102,7 @@ export default function ContractDependencyGraph3D() {
           changed = true;
         }
 
-        const existing = links.find(
-          (l) => l.source === caller && l.target === callee,
-        );
+        const existing = links.find((l) => l.source === caller && l.target === callee);
         if (existing) {
           existing.value = (existing.value ?? 1) + 1;
         } else {
@@ -126,14 +124,8 @@ export default function ContractDependencyGraph3D() {
     return () => ws.close();
   }, []);
 
-  if (isLoading)
-    return <p style={{ color: "var(--muted)", padding: 24 }}>Loading graph…</p>;
-  if (error)
-    return (
-      <p style={{ color: "#ef4444", padding: 24 }}>
-        Failed to load contract graph.
-      </p>
-    );
+  if (isLoading) return <p style={{ color: "var(--muted)", padding: 24 }}>Loading graph…</p>;
+  if (error) return <p style={{ color: "#ef4444", padding: 24 }}>Failed to load contract graph.</p>;
 
   const nodeCount = initial?.nodes.length ?? 0;
   const linkCount = initial?.links.length ?? 0;
@@ -187,9 +179,7 @@ export default function ContractDependencyGraph3D() {
           <span>
             {nodeCount} nodes · {linkCount} edges
           </span>
-          {liveCount > 0 && (
-            <span style={{ color: "#22c55e" }}>+{liveCount} live</span>
-          )}
+          {liveCount > 0 && <span style={{ color: "#22c55e" }}>+{liveCount} live</span>}
         </div>
       </div>
       <div ref={containerRef} style={{ width: "100%", height: 600 }} />

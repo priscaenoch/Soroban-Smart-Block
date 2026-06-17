@@ -6,19 +6,13 @@ const TIERS: { key: keyof StorageTiers; label: string; color: string }[] = [
   { key: "temporary", label: "Temporary Scratchpad", color: "#d29922" },
 ];
 
-export default function StorageTierBreakdown({
-  tiers,
-}: {
-  tiers: StorageTiers;
-}) {
+export default function StorageTierBreakdown({ tiers }: { tiers: StorageTiers }) {
   const hasAny = TIERS.some((t) => tiers[t.key].length > 0);
   if (!hasAny) return null;
 
   return (
     <div className="card" style={{ marginTop: 12 }}>
-      <h4 style={{ marginBottom: 12, fontSize: 13 }}>
-        State Writes by Storage Tier
-      </h4>
+      <h4 style={{ marginBottom: 12, fontSize: 13 }}>State Writes by Storage Tier</h4>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {TIERS.map(({ key, label, color }) => {
           const writes = tiers[key];
@@ -42,12 +36,8 @@ export default function StorageTierBreakdown({
                     flexShrink: 0,
                   }}
                 />
-                <span style={{ fontWeight: 600, fontSize: 12, color }}>
-                  {label}
-                </span>
-                <span style={{ fontSize: 11, color: "var(--muted)" }}>
-                  ({writes.length})
-                </span>
+                <span style={{ fontWeight: 600, fontSize: 12, color }}>{label}</span>
+                <span style={{ fontSize: 11, color: "var(--muted)" }}>({writes.length})</span>
               </div>
               <table
                 style={{
@@ -65,20 +55,14 @@ export default function StorageTierBreakdown({
                 </thead>
                 <tbody>
                   {writes.map((w: StorageWrite, i: number) => (
-                    <tr
-                      key={i}
-                      style={{ borderTop: "1px solid var(--border)" }}
-                    >
+                    <tr key={i} style={{ borderTop: "1px solid var(--border)" }}>
                       <td style={td}>
                         <code>{w.key}</code>
                       </td>
                       <td style={td}>
                         <span
                           style={{
-                            color:
-                              w.changeType === "created"
-                                ? "#3fb950"
-                                : "#d29922",
+                            color: w.changeType === "created" ? "#3fb950" : "#d29922",
                             fontWeight: 600,
                           }}
                         >

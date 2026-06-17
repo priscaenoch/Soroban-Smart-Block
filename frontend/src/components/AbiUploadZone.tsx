@@ -12,13 +12,7 @@
  *   - A "Clear" button to remove the local ABI
  */
 
-import {
-  useRef,
-  useState,
-  useCallback,
-  type DragEvent,
-  type ChangeEvent,
-} from "react";
+import { useRef, useState, useCallback, type DragEvent, type ChangeEvent } from "react";
 import type { LocalAbi } from "../hooks/useLocalAbi";
 
 interface Props {
@@ -32,12 +26,7 @@ interface Props {
   parseError: string | null;
 }
 
-export default function AbiUploadZone({
-  onLoad,
-  onClear,
-  localAbi,
-  parseError,
-}: Props) {
+export default function AbiUploadZone({ onLoad, onClear, localAbi, parseError }: Props) {
   const [dragging, setDragging] = useState(false);
   const [readError, setReadError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -127,11 +116,7 @@ export default function AbiUploadZone({
           {/* Icon + title row */}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 16 }}>📄</span>
-            <span
-              style={{ fontWeight: 600, color: "var(--green)", fontSize: 13 }}
-            >
-              Local ABI loaded
-            </span>
+            <span style={{ fontWeight: 600, color: "var(--green)", fontSize: 13 }}>Local ABI loaded</span>
             <span
               style={{
                 fontSize: 11,
@@ -157,35 +142,28 @@ export default function AbiUploadZone({
             }}
           >
             <span>
-              <span style={{ color: "var(--text)" }}>File:</span>{" "}
-              {localAbi.fileName}
+              <span style={{ color: "var(--text)" }}>File:</span> {localAbi.fileName}
             </span>
             {localAbi.name && (
               <span>
-                <span style={{ color: "var(--text)" }}>Name:</span>{" "}
-                {localAbi.name}
+                <span style={{ color: "var(--text)" }}>Name:</span> {localAbi.name}
               </span>
             )}
             <span>
-              <span style={{ color: "var(--text)" }}>Functions:</span>{" "}
-              {localAbi.functions.length}
+              <span style={{ color: "var(--text)" }}>Functions:</span> {localAbi.functions.length}
             </span>
             {localAbi.types && localAbi.types.length > 0 && (
               <span>
-                <span style={{ color: "var(--text)" }}>Types:</span>{" "}
-                {localAbi.types.length}
+                <span style={{ color: "var(--text)" }}>Types:</span> {localAbi.types.length}
               </span>
             )}
             <span>
-              <span style={{ color: "var(--text)" }}>Loaded:</span>{" "}
-              {new Date(localAbi.loadedAt).toLocaleTimeString()}
+              <span style={{ color: "var(--text)" }}>Loaded:</span> {new Date(localAbi.loadedAt).toLocaleTimeString()}
             </span>
           </div>
 
           {/* Function list */}
-          <div
-            style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 4 }}
-          >
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 4 }}>
             {localAbi.functions.map((f) => (
               <span key={f.name} className="badge" style={{ fontSize: 11 }}>
                 {f.name}
@@ -223,13 +201,7 @@ export default function AbiUploadZone({
         </div>
 
         {/* Hidden file input for Replace */}
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".json"
-          style={{ display: "none" }}
-          onChange={onInputChange}
-        />
+        <input ref={inputRef} type="file" accept=".json" style={{ display: "none" }} onChange={onInputChange} />
       </div>
     );
   }
@@ -246,9 +218,7 @@ export default function AbiUploadZone({
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         onClick={() => inputRef.current?.click()}
-        onKeyDown={(e) =>
-          (e.key === "Enter" || e.key === " ") && inputRef.current?.click()
-        }
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && inputRef.current?.click()}
         style={{
           border: `2px dashed ${dragging ? "var(--accent)" : "var(--border)"}`,
           borderRadius: 8,
@@ -262,12 +232,10 @@ export default function AbiUploadZone({
       >
         <div style={{ fontSize: 24, marginBottom: 8 }}>📂</div>
         <p style={{ color: "var(--text)", fontSize: 13, marginBottom: 4 }}>
-          Drop a contract ABI{" "}
-          <code style={{ color: "var(--accent)" }}>.json</code> file here
+          Drop a contract ABI <code style={{ color: "var(--accent)" }}>.json</code> file here
         </p>
         <p style={{ color: "var(--muted)", fontSize: 12 }}>
-          or click to browse — stored in session memory only, never sent to the
-          server
+          or click to browse — stored in session memory only, never sent to the server
         </p>
       </div>
 

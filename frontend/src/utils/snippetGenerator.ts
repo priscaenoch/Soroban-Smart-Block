@@ -11,18 +11,14 @@ export interface SnippetConfig {
 
 export function generateJavaScriptSnippet(config: SnippetConfig): string {
   const params = (config.functionParams || []).map((p) => p.name).join(", ");
-  const paramTypes = (config.functionParams || [])
-    .map((p) => `  ${p.name}, // ${p.type}`)
-    .join("\n");
+  const paramTypes = (config.functionParams || []).map((p) => `  ${p.name}, // ${p.type}`).join("\n");
 
   return `import { Keypair, Client, StrKey, nativeToScval } from "@stellar/js-sdk";
 
 const contractId = "${config.contractId}";
 const server = new Client({ allowHttp: true, appName: "MyApp", appVersion: "1.0.0" });
 
-async function invoke${
-    config.functionName.charAt(0).toUpperCase() + config.functionName.slice(1)
-  }(${params}) {
+async function invoke${config.functionName.charAt(0).toUpperCase() + config.functionName.slice(1)}(${params}) {
   const account = await server.getAccount(publicKey);
   
   const contractInvocation = new ContractInvocation({
@@ -49,9 +45,7 @@ ${paramTypes ? paramTypes : "      // Add your parameters here"}
 }
 
 export function generateRustSnippet(config: SnippetConfig): string {
-  const params = (config.functionParams || [])
-    .map((p) => `${p.name}: ${p.type}`)
-    .join(", ");
+  const params = (config.functionParams || []).map((p) => `${p.name}: ${p.type}`).join(", ");
 
   return `use soroban_sdk::{contract, contractimpl, Env, Symbol, symbol_short};
 

@@ -12,20 +12,13 @@ const Preview: React.FC<PreviewProps> = ({ packageJsonContent = "" }) => {
     <div className="preview">
       <div className="preview-header">
         <span>Preview</span>
-        <button
-          className="preview-toggle"
-          onClick={() => setShowDeps(!showDeps)}
-          title="Toggle dependency visualizer"
-        >
+        <button className="preview-toggle" onClick={() => setShowDeps(!showDeps)} title="Toggle dependency visualizer">
           📦
         </button>
       </div>
       <div className="preview-content">
         {showDeps ? (
-          <DependencyVisualizer
-            packageJsonContent={packageJsonContent}
-            isVisible={showDeps}
-          />
+          <DependencyVisualizer packageJsonContent={packageJsonContent} isVisible={showDeps} />
         ) : (
           <>
             <div className="contract-events">

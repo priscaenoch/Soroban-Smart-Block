@@ -29,12 +29,10 @@ export default function MigrationBanner({ upgradedAtLedger }: Props) {
         </div>
         <div style={{ color: "var(--muted)", fontSize: 12, lineHeight: 1.6 }}>
           This contract was upgraded at ledger&nbsp;
-          <strong style={{ color: "var(--text)" }}>
-            {upgradedAtLedger}
-          </strong>{" "}
-          but has not yet executed its post-upgrade&nbsp;<code>migrate()</code>
-          &nbsp;step. Per SEP-49, external state interactions remain suspended
-          until the mandatory migration call completes.
+          <strong style={{ color: "var(--text)" }}>{upgradedAtLedger}</strong> but has not yet executed its
+          post-upgrade&nbsp;<code>migrate()</code>
+          &nbsp;step. Per SEP-49, external state interactions remain suspended until the mandatory migration call
+          completes.
         </div>
       </div>
     </div>

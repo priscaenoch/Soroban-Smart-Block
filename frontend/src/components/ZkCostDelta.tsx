@@ -15,9 +15,7 @@ export default function ZkCostDelta({ calls, delta }: Props) {
 
   return (
     <div className="card" style={{ marginTop: 12 }}>
-      <h4 style={{ marginBottom: 10, fontSize: 13 }}>
-        ⚡ ZK Host Functions (CAP-0080 / Protocol 26)
-      </h4>
+      <h4 style={{ marginBottom: 10, fontSize: 13 }}>⚡ ZK Host Functions (CAP-0080 / Protocol 26)</h4>
 
       {/* Aggregate savings banner */}
       {delta && (
@@ -33,16 +31,8 @@ export default function ZkCostDelta({ calls, delta }: Props) {
             borderLeft: "3px solid #22c55e",
           }}
         >
-          <Stat
-            label="Native CPU"
-            value={delta.total_native.toLocaleString()}
-            unit="ops"
-          />
-          <Stat
-            label="Legacy Wasm CPU"
-            value={delta.total_legacy.toLocaleString()}
-            unit="ops"
-          />
+          <Stat label="Native CPU" value={delta.total_native.toLocaleString()} unit="ops" />
+          <Stat label="Legacy Wasm CPU" value={delta.total_legacy.toLocaleString()} unit="ops" />
           <Stat
             label="Saved"
             value={`${delta.saved_cpu.toLocaleString()} (${delta.saved_pct}%)`}
@@ -53,9 +43,7 @@ export default function ZkCostDelta({ calls, delta }: Props) {
       )}
 
       {/* Per-call breakdown */}
-      <table
-        style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}
-      >
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
         <thead>
           <tr style={{ color: "var(--muted)", textAlign: "left" }}>
             <Th>Host Function</Th>
@@ -69,19 +57,12 @@ export default function ZkCostDelta({ calls, delta }: Props) {
         <tbody>
           {calls.map((c, i) => {
             const saved = c.cpu_legacy - c.cpu_native;
-            const pct =
-              c.cpu_legacy > 0 ? Math.round((saved / c.cpu_legacy) * 100) : 0;
+            const pct = c.cpu_legacy > 0 ? Math.round((saved / c.cpu_legacy) * 100) : 0;
             return (
-              <tr
-                key={i}
-                style={{ borderTop: "1px solid var(--border, #2a2a3e)" }}
-              >
+              <tr key={i} style={{ borderTop: "1px solid var(--border, #2a2a3e)" }}>
                 <Td mono>{c.fn_name}</Td>
                 <Td>
-                  <span
-                    className={`badge ${c.curve === "BN254" ? "green" : "wrap"}`}
-                    style={{ fontSize: 10 }}
-                  >
+                  <span className={`badge ${c.curve === "BN254" ? "green" : "wrap"}`} style={{ fontSize: 10 }}>
                     {c.curve}
                   </span>
                 </Td>
@@ -102,17 +83,7 @@ export default function ZkCostDelta({ calls, delta }: Props) {
   );
 }
 
-function Stat({
-  label,
-  value,
-  unit,
-  highlight,
-}: {
-  label: string;
-  value: string;
-  unit: string;
-  highlight?: boolean;
-}) {
+function Stat({ label, value, unit, highlight }: { label: string; value: string; unit: string; highlight?: boolean }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
       <span
@@ -139,13 +110,7 @@ function Stat({
   );
 }
 
-function Th({
-  children,
-  align,
-}: {
-  children: React.ReactNode;
-  align?: "right";
-}) {
+function Th({ children, align }: { children: React.ReactNode; align?: "right" }) {
   return (
     <th
       style={{

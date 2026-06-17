@@ -5,10 +5,7 @@ interface RawDataViewerProps {
   label?: string;
 }
 
-export function RawDataViewer({
-  data,
-  label = "Raw Data",
-}: RawDataViewerProps) {
+export function RawDataViewer({ data, label = "Raw Data" }: RawDataViewerProps) {
   return (
     <div style={{ fontFamily: "monospace", fontSize: "0.9em" }}>
       <JsonNode value={data} name={label} isRoot />
@@ -46,8 +43,7 @@ function JsonNode({ name, value, isRoot = false }: JsonNodeProps) {
   if (type === "string") {
     return (
       <div>
-        <span style={{ color: "#666" }}>{name}:</span>{" "}
-        <span style={{ color: "#080" }}>"{value}"</span>
+        <span style={{ color: "#666" }}>{name}:</span> <span style={{ color: "#080" }}>"{value}"</span>
       </div>
     );
   }
@@ -55,8 +51,7 @@ function JsonNode({ name, value, isRoot = false }: JsonNodeProps) {
   if (type === "number" || type === "bigint") {
     return (
       <div>
-        <span style={{ color: "#666" }}>{name}:</span>{" "}
-        <span style={{ color: "#05a" }}>{String(value)}</span>
+        <span style={{ color: "#666" }}>{name}:</span> <span style={{ color: "#05a" }}>{String(value)}</span>
       </div>
     );
   }
@@ -64,8 +59,7 @@ function JsonNode({ name, value, isRoot = false }: JsonNodeProps) {
   if (type === "boolean") {
     return (
       <div>
-        <span style={{ color: "#666" }}>{name}:</span>{" "}
-        <span style={{ color: "#a50" }}>{String(value)}</span>
+        <span style={{ color: "#666" }}>{name}:</span> <span style={{ color: "#a50" }}>{String(value)}</span>
       </div>
     );
   }
@@ -80,10 +74,7 @@ function JsonNode({ name, value, isRoot = false }: JsonNodeProps) {
     }
     return (
       <div>
-        <div
-          onClick={() => setExpanded(!expanded)}
-          style={{ cursor: "pointer", userSelect: "none" }}
-        >
+        <div onClick={() => setExpanded(!expanded)} style={{ cursor: "pointer", userSelect: "none" }}>
           <span style={{ marginRight: "4px" }}>{expanded ? "▼" : "▶"}</span>
           <span style={{ color: "#666" }}>{name}:</span> [{value.length}]
         </div>
@@ -115,10 +106,7 @@ function JsonNode({ name, value, isRoot = false }: JsonNodeProps) {
     }
     return (
       <div>
-        <div
-          onClick={() => setExpanded(!expanded)}
-          style={{ cursor: "pointer", userSelect: "none" }}
-        >
+        <div onClick={() => setExpanded(!expanded)} style={{ cursor: "pointer", userSelect: "none" }}>
           <span style={{ marginRight: "4px" }}>{expanded ? "▼" : "▶"}</span>
           <span style={{ color: "#666" }}>{name}:</span> {"{"}
           {keys.length}

@@ -47,16 +47,11 @@ export default function HeuristicParams({ params }: Props) {
 
 function ParamRow({ param }: { param: HeuristicParam }) {
   const colors = TYPE_COLORS[param.type] ?? TYPE_COLORS.Unknown;
-  const label =
-    param.confidence === "likely"
-      ? `Likely ${param.type}`
-      : `Possibly ${param.type}`;
+  const label = param.confidence === "likely" ? `Likely ${param.type}` : `Possibly ${param.type}`;
 
   return (
     <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-      <span style={{ color: "var(--muted)", minWidth: 70, fontSize: 12 }}>
-        Param {param.index}
-      </span>
+      <span style={{ color: "var(--muted)", minWidth: 70, fontSize: 12 }}>Param {param.index}</span>
       <span
         style={{
           display: "inline-block",

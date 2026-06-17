@@ -57,9 +57,7 @@ export default function ReentrancyTrapPanel({ result }: Props) {
     >
       {/* Warning banner */}
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-        <span style={{ fontSize: 18, color: borderColor, flexShrink: 0 }}>
-          {REENTRANCY_ICON}
-        </span>
+        <span style={{ fontSize: 18, color: borderColor, flexShrink: 0 }}>{REENTRANCY_ICON}</span>
         <div style={{ flex: 1 }}>
           <div
             style={{
@@ -74,30 +72,19 @@ export default function ReentrancyTrapPanel({ result }: Props) {
           </div>
 
           <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
-            {isReentrancy && (
-              <span>
-                A reentrancy guard prevented recursive re-entry into a locked
-                contract state.
-              </span>
-            )}
+            {isReentrancy && <span>A reentrancy guard prevented recursive re-entry into a locked contract state.</span>}
             {isReentrancy && isDepth && <br />}
             {isDepth && (
               <span>
-                The transaction exceeded the maximum allowed cross-contract call
-                depth
-                {result.callDepth > 0
-                  ? ` (reached depth ${result.callDepth})`
-                  : ""}
-                .
+                The transaction exceeded the maximum allowed cross-contract call depth
+                {result.callDepth > 0 ? ` (reached depth ${result.callDepth})` : ""}.
               </span>
             )}
           </div>
 
           {result.trapEventIndex != null && (
             <div style={{ fontSize: 12, marginTop: 6 }}>
-              <span style={{ color: "var(--muted)" }}>
-                Trapped at diagnostic event{" "}
-              </span>
+              <span style={{ color: "var(--muted)" }}>Trapped at diagnostic event </span>
               <code
                 style={{
                   background: "rgba(248,81,73,0.15)",
@@ -140,9 +127,7 @@ export default function ReentrancyTrapPanel({ result }: Props) {
       {/* Expanded findings table */}
       {expanded && result.findings.length > 0 && (
         <div style={{ marginTop: 12 }}>
-          <table
-            style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}
-          >
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
             <thead>
               <tr
                 style={{
@@ -165,10 +150,7 @@ export default function ReentrancyTrapPanel({ result }: Props) {
                   <td style={td}>
                     <span
                       style={{
-                        background:
-                          f.kind === "reentrancy"
-                            ? "rgba(210,168,255,0.2)"
-                            : "rgba(88,166,255,0.2)",
+                        background: f.kind === "reentrancy" ? "rgba(210,168,255,0.2)" : "rgba(88,166,255,0.2)",
                         color: f.kind === "reentrancy" ? "#d2a8ff" : "#58a6ff",
                         borderRadius: 3,
                         padding: "1px 5px",
@@ -195,9 +177,7 @@ export default function ReentrancyTrapPanel({ result }: Props) {
                       color: "var(--muted)",
                     }}
                   >
-                    {f.contractId
-                      ? `${f.contractId.slice(0, 8)}…${f.contractId.slice(-4)}`
-                      : "—"}
+                    {f.contractId ? `${f.contractId.slice(0, 8)}…${f.contractId.slice(-4)}` : "—"}
                   </td>
                 </tr>
               ))}

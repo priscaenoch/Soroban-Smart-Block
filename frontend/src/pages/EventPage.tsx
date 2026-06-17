@@ -32,10 +32,7 @@ export default function EventPage() {
           <Row
             label="Compliance"
             value={
-              <span
-                className="badge clawback"
-                title="Mandatory authority intervention"
-              >
+              <span className="badge clawback" title="Mandatory authority intervention">
                 ⚠ COMPLIANCE: CLAWBACK — mandatory authority intervention
               </span>
             }
@@ -52,16 +49,11 @@ export default function EventPage() {
                   gap: 6,
                   padding: "3px 10px",
                   background:
-                    ev.sac_side_effect === "account_created"
-                      ? "rgba(16,185,129,0.12)"
-                      : "rgba(59,130,246,0.12)",
+                    ev.sac_side_effect === "account_created" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)",
                   border: `1px solid ${ev.sac_side_effect === "account_created" ? "#10b981" : "#3b82f6"}`,
                   borderRadius: 4,
                   fontSize: 12,
-                  color:
-                    ev.sac_side_effect === "account_created"
-                      ? "#34d399"
-                      : "#60a5fa",
+                  color: ev.sac_side_effect === "account_created" ? "#34d399" : "#60a5fa",
                 }}
                 title={
                   ev.sac_side_effect === "account_created"
@@ -77,16 +69,9 @@ export default function EventPage() {
           />
         )}
         <Row label="Ledger" value={ev.ledger.toLocaleString()} />
-        <Row
-          label="Contract"
-          value={
-            <Link to={`/contract/${ev.contract_id}`}>{ev.contract_id}</Link>
-          }
-        />
+        <Row label="Contract" value={<Link to={`/contract/${ev.contract_id}`}>{ev.contract_id}</Link>} />
         {ev.tx_hash && <Row label="Tx Hash" value={ev.tx_hash} mono />}
-        {ev.raw_topics.length > 0 && (
-          <Row label="Topics" value={ev.raw_topics.join(", ")} mono />
-        )}
+        {ev.raw_topics.length > 0 && <Row label="Topics" value={ev.raw_topics.join(", ")} mono />}
       </div>
 
       {/* Heuristic parameter guesses when no ABI is registered */}
@@ -96,20 +81,13 @@ export default function EventPage() {
       {ev.fee_bump && <FeeSponsorBanner feeBump={ev.fee_bump} />}
 
       {/* Issue #177 — Factory Deployment Trace */}
-      {ev.factory_deployment && (
-        <FactoryDeploymentTree deployment={ev.factory_deployment} />
-      )}
+      {ev.factory_deployment && <FactoryDeploymentTree deployment={ev.factory_deployment} />}
 
       {/* Issue #40 — Resource Consumption breakdown */}
       <ResourceCosts event={ev} />
 
       {/* Issue #164 — CAP-0080 ZK host function cost delta */}
-      {ev.zk_host_calls && (
-        <ZkCostDelta
-          calls={ev.zk_host_calls.calls}
-          delta={ev.zk_host_calls.delta}
-        />
-      )}
+      {ev.zk_host_calls && <ZkCostDelta calls={ev.zk_host_calls.calls} delta={ev.zk_host_calls.delta} />}
 
       {/* Issue #125 — Gas-Limit Alert Flag */}
       <GasLimitAlert event={ev} />
@@ -118,9 +96,7 @@ export default function EventPage() {
       {ev.storage_tiers && <StorageTierBreakdown tiers={ev.storage_tiers} />}
 
       {/* Issue #167 — State restoration (RestoreFootprintOp) */}
-      {ev.archival_info?.isRestoreOp && (
-        <RestoreFootprintPanel restore={ev.archival_info} />
-      )}
+      {ev.archival_info?.isRestoreOp && <RestoreFootprintPanel restore={ev.archival_info} />}
     </div>
   );
 }
@@ -164,9 +140,7 @@ function FunctionBadge({ fn }: { fn: string }) {
     return (
       <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
         <span className="badge wrap">Wrap Native Asset</span>
-        <span style={{ fontSize: 12, color: "var(--muted)" }}>
-          Classic XLM → Soroban
-        </span>
+        <span style={{ fontSize: 12, color: "var(--muted)" }}>Classic XLM → Soroban</span>
       </span>
     );
   }
@@ -174,9 +148,7 @@ function FunctionBadge({ fn }: { fn: string }) {
     return (
       <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
         <span className="badge unwrap">Unwrap Native Asset</span>
-        <span style={{ fontSize: 12, color: "var(--muted)" }}>
-          Soroban → Classic XLM
-        </span>
+        <span style={{ fontSize: 12, color: "var(--muted)" }}>Soroban → Classic XLM</span>
       </span>
     );
   }

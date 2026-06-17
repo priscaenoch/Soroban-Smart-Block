@@ -55,9 +55,7 @@ export default function DeveloperWorkspace() {
       {/* Header */}
       <div className="card">
         <h2 style={{ marginBottom: 4 }}>Developer Workspace</h2>
-        <p style={{ color: "var(--muted)", fontSize: 13, marginBottom: 4 }}>
-          {meta.name}
-        </p>
+        <p style={{ color: "var(--muted)", fontSize: 13, marginBottom: 4 }}>{meta.name}</p>
         <code
           style={{
             fontSize: 11,
@@ -84,10 +82,7 @@ export default function DeveloperWorkspace() {
             style={{
               background: "none",
               color: tab === t.key ? "var(--accent)" : "var(--muted)",
-              borderBottom:
-                tab === t.key
-                  ? "2px solid var(--accent)"
-                  : "2px solid transparent",
+              borderBottom: tab === t.key ? "2px solid var(--accent)" : "2px solid transparent",
               borderRadius: 0,
               padding: "8px 16px",
               fontWeight: tab === t.key ? 700 : 400,
@@ -104,19 +99,14 @@ export default function DeveloperWorkspace() {
         (meta.source_files && meta.source_files.length > 0 ? (
           <SourceFileTree files={meta.source_files} />
         ) : (
-          <RustCodeViewer
-            source={meta.source ?? DEMO_SOURCE}
-            filename={meta.source_file ?? `${id.slice(0, 8)}.rs`}
-          />
+          <RustCodeViewer source={meta.source ?? DEMO_SOURCE} filename={meta.source_file ?? `${id.slice(0, 8)}.rs`} />
         ))}
 
       {/* Tab: Functions */}
       {tab === "functions" && (
         <div className="card">
           {meta.functions.length === 0 ? (
-            <p style={{ color: "var(--muted)" }}>
-              No functions registered for this contract.
-            </p>
+            <p style={{ color: "var(--muted)" }}>No functions registered for this contract.</p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {meta.functions.map((f) => (
@@ -133,9 +123,7 @@ export default function DeveloperWorkspace() {
                   <span className="badge" style={{ flexShrink: 0 }}>
                     {f.name}
                   </span>
-                  <span style={{ color: "var(--muted)", fontSize: 13 }}>
-                    {f.description || "No description."}
-                  </span>
+                  <span style={{ color: "var(--muted)", fontSize: 13 }}>{f.description || "No description."}</span>
                 </div>
               ))}
             </div>
@@ -146,11 +134,7 @@ export default function DeveloperWorkspace() {
       {/* Tab: Transaction History */}
       {tab === "history" && (
         <div className="card">
-          {evLoading ? (
-            <p style={{ color: "var(--muted)" }}>Loading…</p>
-          ) : (
-            <EventTable events={events} />
-          )}
+          {evLoading ? <p style={{ color: "var(--muted)" }}>Loading…</p> : <EventTable events={events} />}
         </div>
       )}
     </div>

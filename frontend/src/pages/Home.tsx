@@ -6,17 +6,7 @@ import EventTable from "../components/EventTable";
 import ExportButton from "../components/ExportButton";
 import { useEventStream } from "../hooks/useEventStream";
 
-const FUNCTIONS = [
-  "",
-  "swap",
-  "transfer",
-  "mint",
-  "burn",
-  "stake",
-  "unstake",
-  "wrap_native",
-  "unwrap_native",
-];
+const FUNCTIONS = ["", "swap", "transfer", "mint", "burn", "stake", "unstake", "wrap_native", "unwrap_native"];
 
 // Issue #48 — transaction type filter
 type TxType = "all" | "soroban" | "classic";
@@ -70,12 +60,8 @@ export default function Home() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h1 style={{ fontSize: 22, marginBottom: 4 }}>
-          Soroban Smart Block Explorer
-        </h1>
-        <p style={{ color: "var(--muted)" }}>
-          Human-readable Soroban contract events on Stellar.
-        </p>
+        <h1 style={{ fontSize: 22, marginBottom: 4 }}>Soroban Smart Block Explorer</h1>
+        <p style={{ color: "var(--muted)" }}>Human-readable Soroban contract events on Stellar.</p>
       </div>
 
       {/* Filters row */}
@@ -147,11 +133,7 @@ export default function Home() {
       </div>
 
       <div className="card">
-        {isLoading ? (
-          <p style={{ color: "var(--muted)" }}>Loading…</p>
-        ) : (
-          <EventTable events={events} />
-        )}
+        {isLoading ? <p style={{ color: "var(--muted)" }}>Loading…</p> : <EventTable events={events} />}
       </div>
 
       {/* Pagination */}
@@ -159,13 +141,8 @@ export default function Home() {
         <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
           ← Prev
         </button>
-        <span style={{ padding: "6px 10px", color: "var(--muted)" }}>
-          Page {page}
-        </span>
-        <button
-          disabled={events.length < 25}
-          onClick={() => setPage((p) => p + 1)}
-        >
+        <span style={{ padding: "6px 10px", color: "var(--muted)" }}>Page {page}</span>
+        <button disabled={events.length < 25} onClick={() => setPage((p) => p + 1)}>
           Next →
         </button>
       </div>

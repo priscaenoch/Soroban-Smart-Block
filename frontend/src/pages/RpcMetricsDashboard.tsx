@@ -87,11 +87,7 @@ export default function RpcMetricsDashboard() {
         }}
       >
         <h2 style={{ margin: 0 }}>RPC Node Performance</h2>
-        {lastUpdated && (
-          <span style={{ fontSize: 12, color: "#888" }}>
-            Updated {lastUpdated.toLocaleTimeString()}
-          </span>
-        )}
+        {lastUpdated && <span style={{ fontSize: 12, color: "#888" }}>Updated {lastUpdated.toLocaleTimeString()}</span>}
       </div>
 
       {error && (
@@ -108,9 +104,7 @@ export default function RpcMetricsDashboard() {
         </div>
       )}
 
-      {metrics.length === 0 && !error && (
-        <p style={{ color: "#888" }}>Loading…</p>
-      )}
+      {metrics.length === 0 && !error && <p style={{ color: "#888" }}>Loading…</p>}
 
       <div style={{ display: "grid", gap: 16 }}>
         {metrics.map((node) => (
@@ -132,9 +126,7 @@ export default function RpcMetricsDashboard() {
               }}
             >
               <div>
-                <code style={{ fontSize: 13, wordBreak: "break-all" }}>
-                  {node.url}
-                </code>
+                <code style={{ fontSize: 13, wordBreak: "break-all" }}>{node.url}</code>
                 <div style={{ marginTop: 4, fontSize: 12, color: "#6b7280" }}>
                   Ledger #{node.lastLedger} · {node.sampleCount} samples
                 </div>
@@ -150,29 +142,13 @@ export default function RpcMetricsDashboard() {
                 marginBottom: 12,
               }}
             >
-              <Stat
-                label="Avg Latency"
-                value={
-                  node.latencyAvgMs != null ? `${node.latencyAvgMs} ms` : "—"
-                }
-              />
-              <Stat
-                label="P95 Latency"
-                value={
-                  node.latencyP95Ms != null ? `${node.latencyP95Ms} ms` : "—"
-                }
-              />
-              <Stat
-                label="Uptime"
-                value={`${node.uptime}%`}
-                highlight={node.uptime < 90}
-              />
+              <Stat label="Avg Latency" value={node.latencyAvgMs != null ? `${node.latencyAvgMs} ms` : "—"} />
+              <Stat label="P95 Latency" value={node.latencyP95Ms != null ? `${node.latencyP95Ms} ms` : "—"} />
+              <Stat label="Uptime" value={`${node.uptime}%`} highlight={node.uptime < 90} />
             </div>
 
             <div>
-              <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 4 }}>
-                Latency history (last 60 probes)
-              </div>
+              <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 4 }}>Latency history (last 60 probes)</div>
               <Sparkline values={node.history} />
             </div>
           </div>
@@ -182,22 +158,10 @@ export default function RpcMetricsDashboard() {
   );
 }
 
-function Stat({
-  label,
-  value,
-  highlight,
-}: {
-  label: string;
-  value: string;
-  highlight?: boolean;
-}) {
+function Stat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div
-      style={{ background: "#f9fafb", borderRadius: 6, padding: "8px 12px" }}
-    >
-      <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 2 }}>
-        {label}
-      </div>
+    <div style={{ background: "#f9fafb", borderRadius: 6, padding: "8px 12px" }}>
+      <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 2 }}>{label}</div>
       <div
         style={{
           fontSize: 16,

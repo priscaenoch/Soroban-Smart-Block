@@ -43,12 +43,8 @@ export default function RwaMetadataDisplay({ contractId }: RwaMetadataProps) {
     >
       <span style={{ fontSize: 20 }}>🏢</span>
       <div>
-        <div style={{ color: "#1e40af", fontWeight: 700, fontSize: 14 }}>
-          Real-World Asset (RWA) Token
-        </div>
-        <div style={{ color: "var(--muted)", fontSize: 12, marginTop: 4 }}>
-          Type: {typeLabel}
-        </div>
+        <div style={{ color: "#1e40af", fontWeight: 700, fontSize: 14 }}>Real-World Asset (RWA) Token</div>
+        <div style={{ color: "var(--muted)", fontSize: 12, marginTop: 4 }}>Type: {typeLabel}</div>
       </div>
     </div>
   );

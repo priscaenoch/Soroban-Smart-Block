@@ -27,52 +27,28 @@ export default function Nav() {
         gap: 16,
       }}
     >
-      <Link
-        to="/"
-        style={{ fontWeight: 700, fontSize: 16, whiteSpace: "nowrap" }}
-      >
+      <Link to="/" style={{ fontWeight: 700, fontSize: 16, whiteSpace: "nowrap" }}>
         ⬡ Soroban Explorer
       </Link>
-      <Link
-        to="/xdr"
-        style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}
-      >
+      <Link to="/xdr" style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}>
         XDR Workbench
       </Link>
-      <Link
-        to="/storage-layout"
-        style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}
-      >
+      <Link to="/storage-layout" style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}>
         Storage Layout
       </Link>
-      <Link
-        to="/rpc-metrics"
-        style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}
-      >
+      <Link to="/rpc-metrics" style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}>
         RPC Metrics
       </Link>
-      <Link
-        to="/graph"
-        style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}
-      >
+      <Link to="/graph" style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}>
         Dep Graph
       </Link>
-      <Link
-        to="/sandbox"
-        style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}
-      >
+      <Link to="/sandbox" style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}>
         Sandbox
       </Link>
-      <Link
-        to="/setup"
-        style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}
-      >
+      <Link to="/setup" style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}>
         Setup
       </Link>
-      <form
-        onSubmit={search}
-        style={{ display: "flex", gap: 8, flex: 1, maxWidth: 600 }}
-      >
+      <form onSubmit={search} style={{ display: "flex", gap: 8, flex: 1, maxWidth: 600 }}>
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}

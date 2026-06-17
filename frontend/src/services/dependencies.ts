@@ -56,10 +56,7 @@ export async function fetchVulnerabilities(
   return vulnerabilities
     .filter((vuln) => {
       // Simple version comparison (in production, use semver)
-      return (
-        version.replace(/^[^0-9]/, "") <
-        (vuln.versions.replace(/^</, "") || "999.999.999")
-      );
+      return version.replace(/^[^0-9]/, "") < (vuln.versions.replace(/^</, "") || "999.999.999");
     })
     .map((vuln) => ({
       id: vuln.id,
@@ -68,9 +65,7 @@ export async function fetchVulnerabilities(
     }));
 }
 
-export async function buildDependencyTree(
-  dependencies: Record<string, string>,
-): Promise<DependencyTree> {
+export async function buildDependencyTree(dependencies: Record<string, string>): Promise<DependencyTree> {
   const tree: DependencyTree = {};
 
   for (const [name, version] of Object.entries(dependencies)) {
@@ -93,9 +88,7 @@ export async function buildDependencyTree(
   return tree;
 }
 
-export function calculateBundleSize(
-  dependencies: Record<string, string>,
-): string {
+export function calculateBundleSize(dependencies: Record<string, string>): string {
   // Rough estimation based on common package sizes
   const sizes: Record<string, number> = {
     react: 42,

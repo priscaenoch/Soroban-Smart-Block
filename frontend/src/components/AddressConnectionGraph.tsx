@@ -53,10 +53,7 @@ export default function AddressConnectionGraph({ contractId }: Props) {
         ...data.nodes.map((n) => ({
           data: {
             id: n.id,
-            label:
-              n.label.length > 12
-                ? `${n.label.slice(0, 6)}…${n.label.slice(-4)}`
-                : n.label,
+            label: n.label.length > 12 ? `${n.label.slice(0, 6)}…${n.label.slice(-4)}` : n.label,
             type: n.type,
           },
         })),
@@ -125,14 +122,9 @@ export default function AddressConnectionGraph({ contractId }: Props) {
   }, [data]);
 
   if (isLoading) return <p style={{ color: "var(--muted)" }}>Loading graph…</p>;
-  if (error)
-    return <p style={{ color: "#ef4444" }}>Failed to load address graph.</p>;
+  if (error) return <p style={{ color: "#ef4444" }}>Failed to load address graph.</p>;
   if (!data || data.nodes.length === 0)
-    return (
-      <p style={{ color: "var(--muted)" }}>
-        No connections found for this contract.
-      </p>
-    );
+    return <p style={{ color: "var(--muted)" }}>No connections found for this contract.</p>;
 
   return (
     <div className="card">
@@ -191,8 +183,7 @@ export default function AddressConnectionGraph({ contractId }: Props) {
         }}
       />
       <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 8 }}>
-        Scroll to zoom · Drag to pan · {data.nodes.length} nodes ·{" "}
-        {data.edges.length} connections
+        Scroll to zoom · Drag to pan · {data.nodes.length} nodes · {data.edges.length} connections
       </p>
     </div>
   );

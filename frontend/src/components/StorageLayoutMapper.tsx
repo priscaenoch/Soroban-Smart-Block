@@ -7,10 +7,7 @@ export interface StorageEntry {
   description?: string;
 }
 
-const TIER_META: Record<
-  StorageEntry["tier"],
-  { label: string; color: string; bg: string; ttl: string }
-> = {
+const TIER_META: Record<StorageEntry["tier"], { label: string; color: string; bg: string; ttl: string }> = {
   instance: {
     label: "Instance",
     color: "#58a6ff",
@@ -121,12 +118,8 @@ function TierBar({ entries }: { entries: StorageEntry[] }) {
                 display: "inline-block",
               }}
             />
-            <span style={{ color: "var(--muted)" }}>
-              {TIER_META[tier].label}
-            </span>
-            <span style={{ fontWeight: 700, color: TIER_META[tier].color }}>
-              {counts[tier]}
-            </span>
+            <span style={{ color: "var(--muted)" }}>{TIER_META[tier].label}</span>
+            <span style={{ fontWeight: 700, color: TIER_META[tier].color }}>{counts[tier]}</span>
           </div>
         ))}
       </div>
@@ -157,19 +150,14 @@ function TierBar({ entries }: { entries: StorageEntry[] }) {
   );
 }
 
-export default function StorageLayoutMapper({
-  entries = DEMO_ENTRIES,
-}: {
-  entries?: StorageEntry[];
-}) {
+export default function StorageLayoutMapper({ entries = DEMO_ENTRIES }: { entries?: StorageEntry[] }) {
   const [filter, setFilter] = useState<StorageEntry["tier"] | "all">("all");
   const [search, setSearch] = useState("");
 
   const visible = entries.filter(
     (e) =>
       (filter === "all" || e.tier === filter) &&
-      (e.key.toLowerCase().includes(search.toLowerCase()) ||
-        e.type.toLowerCase().includes(search.toLowerCase())),
+      (e.key.toLowerCase().includes(search.toLowerCase()) || e.type.toLowerCase().includes(search.toLowerCase())),
   );
 
   return (
@@ -189,30 +177,26 @@ export default function StorageLayoutMapper({
             onChange={(e) => setSearch(e.target.value)}
             style={{ flex: 1, minWidth: 160, fontSize: 12 }}
           />
-          {(["all", "instance", "persistent", "temporary"] as const).map(
-            (t) => (
-              <button
-                key={t}
-                onClick={() => setFilter(t)}
-                style={{
-                  background: filter === t ? "var(--accent)" : "var(--border)",
-                  color: filter === t ? "#0d1117" : "var(--text)",
-                  fontSize: 12,
-                  padding: "4px 12px",
-                }}
-              >
-                {t === "all" ? "All" : TIER_META[t].label}
-              </button>
-            ),
-          )}
+          {(["all", "instance", "persistent", "temporary"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setFilter(t)}
+              style={{
+                background: filter === t ? "var(--accent)" : "var(--border)",
+                color: filter === t ? "#0d1117" : "var(--text)",
+                fontSize: 12,
+                padding: "4px 12px",
+              }}
+            >
+              {t === "all" ? "All" : TIER_META[t].label}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Schema table */}
       <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-        <table
-          style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}
-        >
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr
               style={{
@@ -245,24 +229,16 @@ export default function StorageLayoutMapper({
               visible.map((e, i) => (
                 <tr key={i} style={{ borderTop: "1px solid var(--border)" }}>
                   <td style={td}>
-                    <code style={{ color: "var(--accent)", fontSize: 12 }}>
-                      {e.key}
-                    </code>
+                    <code style={{ color: "var(--accent)", fontSize: 12 }}>{e.key}</code>
                   </td>
                   <td style={td}>
-                    <code style={{ color: "var(--green)", fontSize: 12 }}>
-                      {e.type}
-                    </code>
+                    <code style={{ color: "var(--green)", fontSize: 12 }}>{e.type}</code>
                   </td>
                   <td style={td}>
                     <TierBadge tier={e.tier} />
                   </td>
-                  <td style={{ ...td, color: "var(--muted)", fontSize: 12 }}>
-                    {TIER_META[e.tier].ttl}
-                  </td>
-                  <td style={{ ...td, color: "var(--muted)", fontSize: 12 }}>
-                    {e.description ?? "—"}
-                  </td>
+                  <td style={{ ...td, color: "var(--muted)", fontSize: 12 }}>{TIER_META[e.tier].ttl}</td>
+                  <td style={{ ...td, color: "var(--muted)", fontSize: 12 }}>{e.description ?? "—"}</td>
                 </tr>
               ))
             )}

@@ -12,15 +12,8 @@ export default function ThemeToggle() {
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
-    const prefersDark = window.matchMedia?.(
-      "(prefers-color-scheme: dark)",
-    ).matches;
-    const nextTheme =
-      saved === "light" || saved === "dark"
-        ? saved
-        : prefersDark
-          ? "dark"
-          : "light";
+    const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+    const nextTheme = saved === "light" || saved === "dark" ? saved : prefersDark ? "dark" : "light";
     setTheme(nextTheme);
     applyTheme(nextTheme);
   }, []);

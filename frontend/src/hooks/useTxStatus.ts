@@ -7,11 +7,7 @@
 
 import { useEffect, useState } from "react";
 
-export type TxStatus =
-  | "pending"
-  | "success"
-  | "failed"
-  | "resource_limit_exceeded";
+export type TxStatus = "pending" | "success" | "failed" | "resource_limit_exceeded";
 
 export interface TxStatusPayload {
   tx_hash: string;

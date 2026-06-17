@@ -69,11 +69,7 @@ const SharedSandbox: React.FC = () => {
       </div>
 
       <div className="sandbox-layout">
-        <FileExplorer
-          files={Array.from(files.values())}
-          selectedFile={selectedFile}
-          onSelectFile={setSelectedFile}
-        />
+        <FileExplorer files={Array.from(files.values())} selectedFile={selectedFile} onSelectFile={setSelectedFile} />
 
         <div className="editor-section">
           {currentFile ? (

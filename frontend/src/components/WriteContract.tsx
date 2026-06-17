@@ -1,10 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  isConnected,
-  getAddress,
-  signTransaction,
-} from "@stellar/freighter-api";
+import { isConnected, getAddress, signTransaction } from "@stellar/freighter-api";
 import {
   Contract,
   Networks,
@@ -44,11 +40,7 @@ const NETWORK_PASSPHRASE = Networks.TESTNET;
  * Convert a value (string for primitives, object for structs, number for enums,
  * {variant, data} for unions) to an xdr.ScVal using the ABI type information.
  */
-function toScVal(
-  value: unknown,
-  type: string,
-  typeIndex: TypeIndex,
-): xdr.ScVal {
+function toScVal(value: unknown, type: string, typeIndex: TypeIndex): xdr.ScVal {
   const typeDef = typeIndex.get(type);
 
   // ── Struct ────────────────────────────────────────────────────────────────
@@ -88,21 +80,13 @@ function toScVal(
     }
 
     if (payloadTypes.length === 1) {
-      const payloadScVal = toScVal(
-        unionVal.data ?? "",
-        payloadTypes[0],
-        typeIndex,
-      );
+      const payloadScVal = toScVal(unionVal.data ?? "", payloadTypes[0], typeIndex);
       return xdr.ScVal.scvVec([tagScVal, payloadScVal]);
     }
 
     // Multi-payload tuple variant
-    const dataArr = Array.isArray(unionVal.data)
-      ? (unionVal.data as unknown[])
-      : [];
-    const payloadScVals = payloadTypes.map((pt, i) =>
-      toScVal(dataArr[i] ?? "", pt, typeIndex),
-    );
+    const dataArr = Array.isArray(unionVal.data) ? (unionVal.data as unknown[]) : [];
+    const payloadScVals = payloadTypes.map((pt, i) => toScVal(dataArr[i] ?? "", pt, typeIndex));
     return xdr.ScVal.scvVec([tagScVal, ...payloadScVals]);
   }
 
@@ -117,12 +101,10 @@ function toScVal(
   if (t === "i64") return nativeToScVal(BigInt(str), { type: "i64" });
   if (t === "u128") return nativeToScVal(BigInt(str), { type: "u128" });
   if (t === "i128") return nativeToScVal(BigInt(str), { type: "i128" });
-  if (t === "bool")
-    return nativeToScVal(value === true || str === "true", { type: "bool" });
+  if (t === "bool") return nativeToScVal(value === true || str === "true", { type: "bool" });
   if (t === "string") return nativeToScVal(str, { type: "string" });
   if (t === "symbol") return xdr.ScVal.scvSymbol(str);
-  if (t === "bytes")
-    return nativeToScVal(Buffer.from(str, "hex"), { type: "bytes" });
+  if (t === "bytes") return nativeToScVal(Buffer.from(str, "hex"), { type: "bytes" });
 
   return nativeToScVal(str, { type: "string" });
 }
@@ -150,9 +132,7 @@ export default function WriteContract({ functions, contractId }: Props) {
     retry: false,
   });
 
-  const typeIndex: TypeIndex = fullSpec?.types
-    ? buildTypeIndex(fullSpec.types)
-    : new Map();
+  const typeIndex: TypeIndex = fullSpec?.types ? buildTypeIndex(fullSpec.types) : new Map();
 
   const fn = writeFns.find((f) => f.name === selected);
 
@@ -191,9 +171,7 @@ export default function WriteContract({ functions, contractId }: Props) {
       const account = new Account(accData.id, accData.sequence);
 
       const contract = new Contract(contractId);
-      const callArgs = (fn.params ?? []).map((p) =>
-        toScVal(args[p.name] ?? "", p.type, typeIndex),
-      );
+      const callArgs = (fn.params ?? []).map((p) => toScVal(args[p.name] ?? "", p.type, typeIndex));
 
       const tx = new TransactionBuilder(account, {
         fee: BASE_FEE,
@@ -229,10 +207,7 @@ export default function WriteContract({ functions, contractId }: Props) {
   if (writeFns.length === 0) return null;
 
   return (
-    <div
-      className="card"
-      style={{ display: "flex", flexDirection: "column", gap: 12 }}
-    >
+    <div className="card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <h3 style={{ fontSize: 14 }}>Write Contract</h3>
 
       {!walletAddress ? (
@@ -241,16 +216,11 @@ export default function WriteContract({ functions, contractId }: Props) {
         </button>
       ) : (
         <p style={{ fontSize: 12, color: "var(--green)" }}>
-          Connected:{" "}
-          <code style={{ wordBreak: "break-all" }}>{walletAddress}</code>
+          Connected: <code style={{ wordBreak: "break-all" }}>{walletAddress}</code>
         </p>
       )}
 
-      <select
-        value={selected}
-        onChange={(e) => handleSelect(e.target.value)}
-        style={{ width: "100%" }}
-      >
+      <select value={selected} onChange={(e) => handleSelect(e.target.value)} style={{ width: "100%" }}>
         {writeFns.map((f) => (
           <option key={f.name} value={f.name}>
             {f.name}
@@ -263,42 +233,27 @@ export default function WriteContract({ functions, contractId }: Props) {
           {fn.params.map((p) => {
             const isComplex = typeIndex.has(p.type);
             return (
-              <div
-                key={p.name}
-                style={{ display: "flex", flexDirection: "column", gap: 4 }}
-              >
+              <div key={p.name} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 {/* For primitive types render the original simple input */}
                 {!isComplex && (
                   <>
                     <label style={{ fontSize: 12, color: "var(--muted)" }}>
-                      {p.name}{" "}
-                      <span style={{ color: "var(--accent)" }}>({p.type})</span>
+                      {p.name} <span style={{ color: "var(--accent)" }}>({p.type})</span>
                     </label>
                     <input
                       type={
                         p.type.toLowerCase() === "address"
                           ? "text"
                           : p.type.toLowerCase().includes("int") ||
-                              [
-                                "u32",
-                                "i32",
-                                "u64",
-                                "i64",
-                                "u128",
-                                "i128",
-                              ].includes(p.type.toLowerCase())
+                              ["u32", "i32", "u64", "i64", "u128", "i128"].includes(p.type.toLowerCase())
                             ? "number"
                             : "text"
                       }
                       placeholder={
-                        p.type.toLowerCase() === "address"
-                          ? `${p.name} (e.g. GABC…)`
-                          : `${p.name} (${p.type})`
+                        p.type.toLowerCase() === "address" ? `${p.name} (e.g. GABC…)` : `${p.name} (${p.type})`
                       }
                       value={args[p.name] != null ? String(args[p.name]) : ""}
-                      onChange={(e) =>
-                        setArgs((a) => ({ ...a, [p.name]: e.target.value }))
-                      }
+                      onChange={(e) => setArgs((a) => ({ ...a, [p.name]: e.target.value }))}
                       style={{ width: "100%" }}
                     />
                   </>

@@ -59,15 +59,11 @@ export default function RestoreFootprintPanel({ restore }: Props) {
           State Restoration (RestoreFootprintOp)
         </span>
         <span style={{ color: "var(--muted)", fontSize: 13 }}>
-          {restore.keyCount} ledger key{restore.keyCount !== 1 ? "s" : ""}{" "}
-          revived from archive
+          {restore.keyCount} ledger key{restore.keyCount !== 1 ? "s" : ""} revived from archive
         </span>
         {restore.feePaid != null && (
-          <span
-            style={{ marginLeft: "auto", color: "var(--muted)", fontSize: 12 }}
-          >
-            Fee paid:{" "}
-            <strong>{restore.feePaid.toLocaleString()} stroops</strong>
+          <span style={{ marginLeft: "auto", color: "var(--muted)", fontSize: 12 }}>
+            Fee paid: <strong>{restore.feePaid.toLocaleString()} stroops</strong>
           </span>
         )}
       </div>

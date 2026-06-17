@@ -68,14 +68,7 @@ interface NodeRowProps {
   onToggle: (path: string) => void;
 }
 
-function NodeRow({
-  node,
-  depth,
-  selected,
-  onSelect,
-  expanded,
-  onToggle,
-}: NodeRowProps) {
+function NodeRow({ node, depth, selected, onSelect, expanded, onToggle }: NodeRowProps) {
   const isExpanded = expanded.has(node.fullPath);
   const isSelected = selected === node.fullPath;
 
@@ -231,9 +224,7 @@ export default function SourceFileTree({ files }: Props) {
         {selected ? (
           <RustCodeViewer source={selected.content} filename={selected.path} />
         ) : (
-          <div style={{ padding: 24, color: "var(--muted)", fontSize: 13 }}>
-            Select a file to view its source.
-          </div>
+          <div style={{ padding: 24, color: "var(--muted)", fontSize: 13 }}>Select a file to view its source.</div>
         )}
       </div>
     </div>

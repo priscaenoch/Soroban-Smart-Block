@@ -2,13 +2,7 @@ import { Link } from "react-router-dom";
 import type { DecodedEvent } from "../api";
 import FiatValue from "./FiatValue";
 import { getGasAlert } from "./GasLimitAlert";
-import {
-  addressRoute,
-  truncateAddress,
-  isAccountAddress,
-  isContractAddress,
-  isMuxedAddress,
-} from "../utils/strkey";
+import { addressRoute, truncateAddress, isAccountAddress, isContractAddress, isMuxedAddress } from "../utils/strkey";
 
 /** Stellar strkey address pattern: G.../C.../M... (56+ chars, base32 alphabet) */
 const ADDRESS_RE = /\b([GCM][A-Z2-7]{55,})\b/g;
@@ -25,12 +19,7 @@ function LinkedDescription({ text }: { text: string }) {
   ADDRESS_RE.lastIndex = 0;
   while ((match = ADDRESS_RE.exec(text)) !== null) {
     const addr = match[1];
-    if (
-      !isAccountAddress(addr) &&
-      !isContractAddress(addr) &&
-      !isMuxedAddress(addr)
-    )
-      continue;
+    if (!isAccountAddress(addr) && !isContractAddress(addr) && !isMuxedAddress(addr)) continue;
     if (match.index > last) parts.push(text.slice(last, match.index));
     const route = addressRoute(addr);
     if (route) {
@@ -56,22 +45,16 @@ function LinkedDescription({ text }: { text: string }) {
 function parseSwapPath(description: string): string[] | null {
   const arrowParts = description.split(/\s*→\s*/);
   if (arrowParts.length >= 2) {
-    const hops = arrowParts
-      .map((p) => p.match(/([\d,.]+)\s+([A-Z]{2,10})/)?.[0])
-      .filter(Boolean) as string[];
+    const hops = arrowParts.map((p) => p.match(/([\d,.]+)\s+([A-Z]{2,10})/)?.[0]).filter(Boolean) as string[];
     if (hops.length >= 2) return hops;
   }
-  const m = description.match(
-    /([\d,.]+)\s+([A-Z]{2,10}).*?(?:for|to)\s+([\d,.]+)\s+([A-Z]{2,10})/i,
-  );
+  const m = description.match(/([\d,.]+)\s+([A-Z]{2,10}).*?(?:for|to)\s+([\d,.]+)\s+([A-Z]{2,10})/i);
   if (m) return [`${m[1]} ${m[2]}`, `${m[3]} ${m[4]}`];
   return null;
 }
 
 /** Parse amount and symbol from a transfer description like "Address GA… transferred 50.00 PYUSD to …" */
-function parseTransfer(
-  description: string,
-): { amount: number; symbol: string } | null {
+function parseTransfer(description: string): { amount: number; symbol: string } | null {
   const m = description.match(/transferred\s+([\d,.]+)\s+([A-Z]{2,10})/i);
   if (!m) return null;
   const amount = parseFloat(m[1].replace(/,/g, ""));
@@ -87,9 +70,7 @@ function FunctionBadge({ fn }: { fn: string }) {
     return (
       <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
         <span className="badge wrap">Wrap Native Asset</span>
-        <span style={{ fontSize: 11, color: "var(--muted)" }}>
-          Classic XLM → Soroban
-        </span>
+        <span style={{ fontSize: 11, color: "var(--muted)" }}>Classic XLM → Soroban</span>
       </span>
     );
   }
@@ -97,9 +78,7 @@ function FunctionBadge({ fn }: { fn: string }) {
     return (
       <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
         <span className="badge unwrap">Unwrap Native Asset</span>
-        <span style={{ fontSize: 11, color: "var(--muted)" }}>
-          Soroban → Classic XLM
-        </span>
+        <span style={{ fontSize: 11, color: "var(--muted)" }}>Soroban → Classic XLM</span>
       </span>
     );
   }
@@ -107,11 +86,7 @@ function FunctionBadge({ fn }: { fn: string }) {
 }
 
 /** Badge for SAC implicit side-effects (auto-created account or trustline). */
-function SacSideEffectBadge({
-  kind,
-}: {
-  kind: NonNullable<DecodedEvent["sac_side_effect"]>;
-}) {
+function SacSideEffectBadge({ kind }: { kind: NonNullable<DecodedEvent["sac_side_effect"]> }) {
   const isAccountCreated = kind === "account_created";
   return (
     <span
@@ -120,9 +95,7 @@ function SacSideEffectBadge({
         alignItems: "center",
         gap: 4,
         padding: "2px 8px",
-        background: isAccountCreated
-          ? "rgba(16,185,129,0.12)"
-          : "rgba(59,130,246,0.12)",
+        background: isAccountCreated ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)",
         border: `1px solid ${isAccountCreated ? "#10b981" : "#3b82f6"}`,
         borderRadius: 4,
         fontSize: 11,
@@ -137,19 +110,13 @@ function SacSideEffectBadge({
           : "SAC implicitly opened a trustline for this asset on the recipient account"
       }
     >
-      {isAccountCreated
-        ? "⬡ SAC Auto-Created Account Entry"
-        : "⬡ SAC Native Trustline Open"}
+      {isAccountCreated ? "⬡ SAC Auto-Created Account Entry" : "⬡ SAC Native Trustline Open"}
     </span>
   );
 }
 
 /** Inline badge for Protocol 26 TTL extension events. */
-function TTLExtensionBadge({
-  ext,
-}: {
-  ext: NonNullable<DecodedEvent["ttl_extension"]>;
-}) {
+function TTLExtensionBadge({ ext }: { ext: NonNullable<DecodedEvent["ttl_extension"]> }) {
   return (
     <span
       style={{
@@ -170,28 +137,16 @@ function TTLExtensionBadge({
     >
       ⏱ TTL Extension
       {ext.min_extension != null && (
-        <span style={{ color: "var(--muted)" }}>
-          Requested: +{ext.min_extension} Ledgers
-        </span>
+        <span style={{ color: "var(--muted)" }}>Requested: +{ext.min_extension} Ledgers</span>
       )}
-      {ext.max_extension != null && (
-        <span style={{ color: "var(--muted)" }}>
-          Clamp: {ext.max_extension}
-        </span>
-      )}
-      {ext.extend_to != null && (
-        <span style={{ color: "var(--muted)" }}>→ {ext.extend_to}</span>
-      )}
+      {ext.max_extension != null && <span style={{ color: "var(--muted)" }}>Clamp: {ext.max_extension}</span>}
+      {ext.extend_to != null && <span style={{ color: "var(--muted)" }}>→ {ext.extend_to}</span>}
     </span>
   );
 }
 
 /** Issue #177: Inline badge for factory deployment events. */
-function FactoryDeploymentBadge({
-  deployment,
-}: {
-  deployment: NonNullable<DecodedEvent["factory_deployment"]>;
-}) {
+function FactoryDeploymentBadge({ deployment }: { deployment: NonNullable<DecodedEvent["factory_deployment"]> }) {
   return (
     <span
       style={{
@@ -217,8 +172,7 @@ function FactoryDeploymentBadge({
 }
 
 export default function EventTable({ events }: Props) {
-  if (!events.length)
-    return <p style={{ color: "var(--muted)" }}>No events found.</p>;
+  if (!events.length) return <p style={{ color: "var(--muted)" }}>No events found.</p>;
 
   return (
     <div style={{ overflowX: "auto" }}>
@@ -238,10 +192,7 @@ export default function EventTable({ events }: Props) {
         </thead>
         <tbody>
           {events.map((ev) => (
-            <tr
-              key={ev.seq}
-              style={{ borderBottom: "1px solid var(--border)" }}
-            >
+            <tr key={ev.seq} style={{ borderBottom: "1px solid var(--border)" }}>
               <td style={td}>
                 <Link to={`/event/${ev.seq}`}>#{ev.seq}</Link>
               </td>
@@ -259,11 +210,7 @@ export default function EventTable({ events }: Props) {
                 }}
               >
                 {ev.is_clawback && (
-                  <span
-                    className="badge clawback"
-                    style={{ marginRight: 6 }}
-                    title="Mandatory authority intervention"
-                  >
+                  <span className="badge clawback" style={{ marginRight: 6 }} title="Mandatory authority intervention">
                     ⚠ COMPLIANCE: CLAWBACK
                   </span>
                 )}
@@ -285,22 +232,14 @@ export default function EventTable({ events }: Props) {
                     ⚠ High Gas
                   </span>
                 )}
-                {ev.ttl_extension && (
-                  <TTLExtensionBadge ext={ev.ttl_extension} />
-                )}
-                {ev.factory_deployment && (
-                  <FactoryDeploymentBadge deployment={ev.factory_deployment} />
-                )}
-                {ev.sac_side_effect && (
-                  <SacSideEffectBadge kind={ev.sac_side_effect} />
-                )}
+                {ev.ttl_extension && <TTLExtensionBadge ext={ev.ttl_extension} />}
+                {ev.factory_deployment && <FactoryDeploymentBadge deployment={ev.factory_deployment} />}
+                {ev.sac_side_effect && <SacSideEffectBadge kind={ev.sac_side_effect} />}
                 <LinkedDescription text={ev.description} />
                 {ev.function === "transfer" &&
                   (() => {
                     const t = parseTransfer(ev.description);
-                    return t ? (
-                      <FiatValue amount={t.amount} symbol={t.symbol} />
-                    ) : null;
+                    return t ? <FiatValue amount={t.amount} symbol={t.symbol} /> : null;
                   })()}
                 {ev.function === "swap" &&
                   (() => {

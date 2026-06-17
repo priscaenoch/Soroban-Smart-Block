@@ -17,11 +17,7 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({ onSelect }) => {
 
         <div className="templates-grid">
           {templates.map((template) => (
-            <button
-              key={template.id}
-              className="template-card"
-              onClick={() => onSelect(template.id)}
-            >
+            <button key={template.id} className="template-card" onClick={() => onSelect(template.id)}>
               <h3>{template.name}</h3>
               <p>{template.description}</p>
             </button>
