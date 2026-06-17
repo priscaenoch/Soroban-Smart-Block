@@ -1,6 +1,6 @@
 import { SandboxFile } from './webcontainer';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_BASE = (import.meta.env as any).VITE_API_URL || 'http://localhost:3001';
 
 export interface SavedSandbox {
   sandboxId: string;

@@ -76,7 +76,7 @@ export async function buildDependencyTree(
     tree[name] = {
       name,
       version,
-      vulnerabilities: vulnerabilities.length > 0 ? vulnerabilities : undefined,
+      vulnerabilities: vulnerabilities.length > 0 ? (vulnerabilities as Array<{ id: string; severity: "medium" | "critical" | "high" | "low"; title: string }>) : undefined,
     };
   }
 

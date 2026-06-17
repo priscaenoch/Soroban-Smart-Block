@@ -107,7 +107,7 @@ export async function mountFiles(
     current[lastPart] = { file: { contents: file.content } };
   }
 
-  await container.mount(tree);
+  await container.mount(tree as any);
 }
 
 export async function runCommand(
