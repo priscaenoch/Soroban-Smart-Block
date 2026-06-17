@@ -62,11 +62,11 @@ jobs:
           restore-keys: frontend-20-
 
       - name: Install indexer deps
-        run: npm ci
+        run: npm install
         working-directory: indexer
 
       - name: Install frontend deps
-        run: npm ci
+        run: npm install
         working-directory: frontend
 
       - name: ESLint — indexer
