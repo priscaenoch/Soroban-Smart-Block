@@ -1,0 +1,16 @@
+{
+  "name": "soroban-smart-block-explorer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup": "node scripts/setup.js",
+    "doctor": "node scripts/doctor.js",
+    "dev": "make dev"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2",
+    "pg": "^8.12.0"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "name": "Soroban Smart Block Explorer Development",
+  "image": "mcr.microsoft.com/devcontainers/rust:1",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    },
+    "ghcr.io/devcontainers/features/postgres:1": {
+      "version": "16"
+    }
+  },
+  "forwardPorts": [5173, 3001, 5432],
+  "portsAttributes": {
+    "5173": {
+      "label": "Frontend",
+      "onAutoForward": "openPreview"
+    },
+    "3001": {
+      "label": "Indexer API",
+      "onAutoForward": "silent"
+    },
+    "5432": {
+      "label": "PostgreSQL Database",
+      "onAutoForward": "silent"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "rust-lang.rust-analyzer",
+        "bradlc.vscode-tailwindcss"
+      ]
+    }
+  },
+  "postCreateCommand": "rustup target add wasm32-unknown-unknown && npm run setup -- --non-interactive"
+}

@@ -1,0 +1,57 @@
+name: PR Quality Gates
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pr-quality:
+    name: PR Quality Gates
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check branch name convention
+        continue-on-error: true
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          if [[ "$BRANCH" == "main" || "$BRANCH" == "master" ]]; then
+            echo "Branch '$BRANCH' is exempt from the naming convention check."
+            exit 0
+          fi
+          PATTERN="^(feature|fix|docs|chore|refactor|test|ci|hotfix|release)/"
+          if [[ ! "$BRANCH" =~ $PATTERN ]]; then
+            echo "::error::Branch '$BRANCH' does not follow the naming convention."
+            echo "::error::Expected pattern: <type>/<description>"
+            echo "::error::Allowed types: feature, fix, docs, chore, refactor, test, ci, hotfix, release"
+            exit 1
+          fi
+          echo "Branch name '$BRANCH' is valid."
+
+      - name: Label PR by size
+        uses: codelytv/pr-size-labeler@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          xs_label: "size/XS"
+          xs_max_size: 10
+          s_label: "size/S"
+          s_max_size: 100
+          m_label: "size/M"
+          m_max_size: 500
+          l_label: "size/L"
+          l_max_size: 1000
+          xl_label: "size/XL"
+          fail_if_xl: false
+
+      - name: Auto-assign PR author
+        uses: toshimaru/auto-author-assign@v2.1.1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
