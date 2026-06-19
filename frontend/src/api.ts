@@ -1,3 +1,5 @@
+import { BatchCall } from "./types/batch";
+
 const BASE = "/api";
 
 export interface SpecType {
@@ -441,4 +443,99 @@ export const api = {
       functions: { name: string; outputs?: string[] }[];
       types: SpecType[];
     }>(`/contracts/${id}/spec-full`),
+
+  // Issue #211: Batch Multi-Call endpoints
+  batchSimulate: (calls: BatchCall[], sourceAccount?: string) =>
+    fetch(`${BASE}/batch/simulate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ calls, sourceAccount }),
+    }).then((r) => r.json()),
+  batchEstimateGas: (calls: BatchCall[], sourceAccount?: string) =>
+    fetch(`${BASE}/batch/estimate-gas`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ calls, sourceAccount }),
+    }).then((r) => r.json()),
+  batchOptimize: (calls: BatchCall[], sourceAccount?: string) =>
+    fetch(`${BASE}/batch/optimize`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ calls, sourceAccount }),
+    }).then((r) => r.json()),
+  batchValidate: (calls: BatchCall[], sourceAccount?: string) =>
+    fetch(`${BASE}/batch/validate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ calls, sourceAccount }),
+    }).then((r) => r.json()),
+
+  // Batch types export
+  exportBatchAsHardhat: (calls: BatchCall[]) => {
+    const lines = [
+      "// Generated Hardhat script for Soroban batch calls",
+      "const { Server, Contract, TransactionBuilder, Networks, nativeToScVal } = require('@stellar/stellar-sdk');",
+      "",
+      "async function main() {",
+      "  const server = new Server(process.env.SOROBAN_RPC_URL || 'https://soroban-testnet.stellar.org');",
+      "  const source = process.env.SOROBAN_SOURCE || 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN';",
+      "  const account = await server.getAccount(source);",
+      "",
+      ...calls.flatMap((call, i) => [
+        `  const op${i + 1} = new Contract('${call.contractId}').call(`,
+        `    '${call.functionName}'${call.args.length ? "," : ""}`,
+        ...(call.args.length
+          ? call.args.map(
+              (arg) =>
+                `    nativeToScVal(${JSON.stringify(arg.value)}${arg.type ? `, { type: '${arg.type}' }` : ""}),`,
+            )
+          : []),
+        "  );",
+        "",
+      ]),
+      "  const tx = new TransactionBuilder(account, {",
+      "    fee: '100',",
+      "    networkPassphrase: Networks.TESTNET,",
+      "  })",
+      ...calls.map((_, i) => `    .addOperation(op${i + 1})`),
+      "      .setTimeout(30)",
+      "      .build();",
+      "",
+      "  const simulation = await server.simulateTransaction(tx);",
+      "  console.log(simulation);",
+      "}",
+      "",
+      "main().catch(console.error);",
+    ];
+    return lines.join("\n");
+  },
+  exportBatchAsCurl: (calls: BatchCall[], sourceAccount?: string) =>
+    JSON.stringify(
+      {
+        calls,
+        sourceAccount,
+      },
+      null,
+      2,
+    ),
+  exportBatchAsGraphQL: () =>
+    [
+      "mutation SimulateBatch($calls: [BatchCallInput!]!, $sourceAccount: String) {",
+      "  simulateBatch(calls: $calls, sourceAccount: $sourceAccount) {",
+      "    success",
+      "    results { callId success returnValue error }",
+      "    totalGas { cpuInsns memBytes fee }",
+      "  }",
+      "}",
+    ].join("\n"),
+  exportBatchAsJson: (calls: BatchCall[], sourceAccount?: string) =>
+    JSON.stringify(
+      {
+        calls,
+        sourceAccount,
+        generatedAt: new Date().toISOString(),
+      },
+      null,
+      2,
+    ),
 };

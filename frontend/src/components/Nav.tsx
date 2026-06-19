@@ -50,6 +50,9 @@ export default function Nav() {
       <Link to="/sandbox" style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}>
         Sandbox
       </Link>
+      <Link to="/batch" style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}>
+        Batch
+      </Link>
       <Link to="/setup" style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}>
         Setup
       </Link>

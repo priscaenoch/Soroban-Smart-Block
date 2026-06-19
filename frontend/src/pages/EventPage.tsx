@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import ResourceCosts from "../components/ResourceCosts";
+import SSEStatusIndicator from "../components/SSEStatusIndicator";
 import StorageTierBreakdown from "../components/StorageTierBreakdown";
 import GasLimitAlert from "../components/GasLimitAlert";
 import FeeSponsorBanner from "../components/FeeSponsorBanner";
@@ -70,7 +71,17 @@ export default function EventPage() {
         )}
         <Row label="Ledger" value={ev.ledger.toLocaleString()} />
         <Row label="Contract" value={<Link to={`/contract/${ev.contract_id}`}>{ev.contract_id}</Link>} />
-        {ev.tx_hash && <Row label="Tx Hash" value={ev.tx_hash} mono />}
+        {ev.tx_hash && (
+          <Row
+            label="Tx Hash"
+            value={
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontFamily: "monospace" }}>{ev.tx_hash}</span>
+                <SSEStatusIndicator txHash={ev.tx_hash} />
+              </span>
+            }
+          />
+        )}
         {ev.raw_topics.length > 0 && <Row label="Topics" value={ev.raw_topics.join(", ")} mono />}
       </div>
 

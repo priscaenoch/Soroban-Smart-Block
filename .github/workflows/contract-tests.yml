@@ -1,0 +1,198 @@
+name: Contract Test Suite
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+  # Fuzz time budget per target (seconds).  10 min in CI.
+  FUZZ_DURATION: 600
+
+jobs:
+  # ─── Unit / property / snapshot / stress / gas / multi-contract tests ────────
+  test:
+    name: Test Suite (≥85% coverage target)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run all contract tests (unit + property + snapshot + stress + gas + multi-contract)
+        working-directory: contracts/ticket
+        # Must complete in under 2 minutes per acceptance criteria.
+        timeout-minutes: 2
+        run: cargo test --features testutils --release 2>&1
+
+      - name: Install cargo-llvm-cov
+        run: cargo install cargo-llvm-cov --locked
+
+      - name: Measure code coverage
+        working-directory: contracts/ticket
+        run: |
+          cargo llvm-cov --features testutils --release \
+            --lcov --output-path lcov.info 2>&1
+          cargo llvm-cov report --features testutils --release \
+            --summary-only 2>&1 | tee coverage_summary.txt
+          # Fail if line coverage drops below 85%.
+          COVERAGE=$(grep -oP 'Lines\s+\K[\d.]+(?=%)' coverage_summary.txt || echo "0")
+          echo "Line coverage: ${COVERAGE}%"
+          awk -v cov="$COVERAGE" 'BEGIN { if (cov+0 < 85) { print "FAIL: coverage " cov "% < 85%"; exit 1 } else { print "PASS: coverage " cov "%" } }'
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: contracts/ticket/lcov.info
+
+  # ─── Mutation testing ─────────────────────────────────────────────────────────
+  mutation:
+    name: Mutation Testing (cargo-mutants)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-mutants-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install cargo-mutants
+        run: cargo install cargo-mutants --locked
+
+      - name: Run mutation tests
+        working-directory: contracts/ticket
+        run: |
+          cargo mutants --features testutils \
+            --output mutants_out \
+            --timeout 120 \
+            -- --release 2>&1
+          # Summarise results; non-zero exit means survived mutants.
+          cat mutants_out/mutants.out || true
+
+      - name: Upload mutation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-results
+          path: contracts/ticket/mutants_out/
+
+  # ─── Fuzz testing ─────────────────────────────────────────────────────────────
+  fuzz:
+    name: Fuzz Tests (${{ matrix.target }}, ${FUZZ_DURATION}s)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - fuzz_mint
+          - fuzz_transfer
+          - fuzz_full_lifecycle
+          - fuzz_verify
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust nightly (required by cargo-fuzz)
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-fuzz-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --locked
+
+      - name: Run fuzz target for ${{ env.FUZZ_DURATION }} seconds
+        working-directory: contracts/ticket
+        run: |
+          cargo fuzz run ${{ matrix.target }} \
+            -- -max_total_time=${{ env.FUZZ_DURATION }} \
+               -max_len=4096 \
+               -detect_leaks=0 \
+            2>&1
+
+      - name: Upload fuzz corpus / crashes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-${{ matrix.target }}
+          path: |
+            contracts/ticket/fuzz/corpus/${{ matrix.target }}/
+            contracts/ticket/fuzz/artifacts/${{ matrix.target }}/
+
+  # ─── Kani formal verification ─────────────────────────────────────────────────
+  kani:
+    name: Kani Formal Verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Kani
+        uses: model-checking/kani-github-action@v1.1
+
+      - name: Run Kani harnesses
+        working-directory: contracts/ticket
+        run: |
+          cargo kani \
+            --harness kani_next_id_no_overflow \
+            --harness kani_price_addition_no_overflow \
+            --harness kani_resale_cap_invariant \
+            --harness kani_ticket_status_fsm \
+            --harness kani_sold_out_boundary \
+            --harness kani_verify_idempotence \
+            --harness kani_fee_bps_bounds \
+            --harness kani_quorum_threshold_no_overflow \
+            2>&1
+
+  # ─── Gas regression ───────────────────────────────────────────────────────────
+  gas-regression:
+    name: Gas Benchmark Regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-gas-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run gas benchmark tests
+        working-directory: contracts/ticket
+        run: |
+          cargo test --features testutils --release \
+            gas_benchmark_tests 2>&1
