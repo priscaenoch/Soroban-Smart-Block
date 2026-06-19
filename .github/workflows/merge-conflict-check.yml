@@ -1,0 +1,281 @@
+name: Merge Conflict Prevention
+
+on:
+  pull_request:
+    branches: [main, "release/*"]
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── 1. Conflict Marker Check ─────────────────────────────────────────────────
+  conflict-markers:
+    name: Conflict Marker Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for conflict markers in JS/TS files
+        run: |
+          echo "Scanning for conflict markers (<<<<<<<, =======, >>>>>>>)..."
+          if grep -rn "^<<<<<<< \|^=======$\|^>>>>>>> " \
+               --include="*.js" --include="*.ts" --include="*.tsx" --include="*.jsx" \
+               --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git \
+               . ; then
+            echo ""
+            echo "❌ Conflict markers found in JS/TS files. See matches above."
+            exit 1
+          fi
+          echo "✅ No conflict markers in JS/TS files."
+
+      - name: Check for conflict markers in Rust files
+        run: |
+          if grep -rn "^<<<<<<< \|^=======$\|^>>>>>>> " \
+               --include="*.rs" --include="*.toml" \
+               --exclude-dir=.git \
+               . ; then
+            echo "❌ Conflict markers found in Rust files."
+            exit 1
+          fi
+          echo "✅ No conflict markers in Rust files."
+
+      - name: Check for conflict markers in config/data files
+        run: |
+          if grep -rn "^<<<<<<< \|^=======$\|^>>>>>>> " \
+               --include="*.json" --include="*.yaml" --include="*.yml" \
+               --include="*.sql" --include="*.md" \
+               --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git \
+               . ; then
+            echo "❌ Conflict markers found in config/data files."
+            exit 1
+          fi
+          echo "✅ No conflict markers in config/data files."
+
+      - name: Check for merge branch artifacts
+        run: |
+          if grep -rn ">>>>>>> main\|<<<<<<< main\|>>>>>>> master\|<<<<<<< master\|>>>>>>> HEAD\|<<<<<<< HEAD" \
+               --include="*.js" --include="*.ts" --include="*.rs" --include="*.json" \
+               --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git \
+               . ; then
+            echo "❌ Branch-specific merge artifacts detected."
+            exit 1
+          fi
+          echo "✅ No branch merge artifacts."
+
+      - name: Check for unresolved merge backup files
+        run: |
+          found=$(find . \
+            \( -name "*.orig" -o -name "*.BACKUP.*" -o -name "*.BASE.*" \
+               -o -name "*.LOCAL.*" -o -name "*.REMOTE.*" \) \
+            -not -path "./.git/*" \
+            -not -path "*/node_modules/*" \
+            2>/dev/null | head -20)
+          if [ -n "$found" ]; then
+            echo "❌ Unresolved merge backup files found:"
+            echo "$found"
+            exit 1
+          fi
+          echo "✅ No merge backup files."
+
+  # ── 2. Semantic Conflict Detection ───────────────────────────────────────────
+  semantic-conflicts:
+    name: Semantic Conflict Detection
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run semantic conflict detector
+        id: semantic
+        run: |
+          node scripts/semantic-conflict-detector.js \
+            --base origin/${{ github.base_ref }} \
+            --head ${{ github.sha }} \
+            --output /tmp/semantic-report.json
+        continue-on-error: true
+
+      - name: Upload semantic conflict report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semantic-conflict-report
+          path: /tmp/semantic-report.json
+          retention-days: 14
+
+      - name: Comment semantic conflicts on PR
+        if: steps.semantic.outcome == 'failure' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            let report = {};
+            try { report = JSON.parse(fs.readFileSync('/tmp/semantic-report.json', 'utf8')); } catch {}
+
+            const conflicts = report.conflicts ?? [];
+            if (conflicts.length === 0) return;
+
+            const sevIcon = { critical: '🔴', high: '🟠', medium: '🟡', low: '🔵' };
+            const rows = conflicts.map(c =>
+              `| ${sevIcon[c.severity] ?? '⚪'} ${c.severity} | \`${c.type}\` | \`${c.file}\` | ${c.detail} |`
+            ).join('\n');
+
+            const body = `## ⚠️ Semantic Conflict Detection
+
+            This PR has **${conflicts.length}** semantic conflict(s) that go beyond simple text conflicts:
+
+            | Severity | Type | File | Detail |
+            |----------|------|------|--------|
+            ${rows}
+
+            > **These conflicts cannot be resolved by a simple merge.** Please coordinate with the author(s) of the conflicting changes.
+
+            <details><summary>💡 Suggestions</summary>
+
+            ${conflicts.map(c => `- **${c.file}**: ${c.suggestion}`).join('\n')}
+
+            </details>`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+
+  # ── 3. Conflict Complexity Scoring ───────────────────────────────────────────
+  complexity-score:
+    name: Conflict Complexity Score
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: [conflict-markers]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Score any remaining conflict complexity
+        run: |
+          node scripts/conflict-complexity-scorer.js --json > /tmp/complexity-report.json 2>&1 || true
+          cat /tmp/complexity-report.json
+
+      - name: Upload complexity report
+        uses: actions/upload-artifact@v4
+        with:
+          name: conflict-complexity-report
+          path: /tmp/complexity-report.json
+          retention-days: 14
+
+  # ── 4. Visual Diff Generation ─────────────────────────────────────────────────
+  visual-diff:
+    name: Visual Diff
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate visual diff
+        run: |
+          node scripts/visual-diff.js \
+            --base origin/${{ github.base_ref }} \
+            --head ${{ github.sha }} \
+            --output /tmp/visual-diff.html \
+            --comment /tmp/diff-comment.md
+        continue-on-error: true
+
+      - name: Post visual diff summary as PR comment
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            let body = '';
+            try { body = fs.readFileSync('/tmp/diff-comment.md', 'utf8'); } catch {
+              body = '> Visual diff generation skipped (no changes or error).';
+            }
+
+            // Find and update existing diff comment, or create new one
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c =>
+              c.user.type === 'Bot' && c.body.startsWith('## 🔀 Visual Diff Summary')
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Upload visual diff HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diff-html
+          path: /tmp/visual-diff.html
+          retention-days: 7
+
+  # ── 5. Conflict Dashboard Update ─────────────────────────────────────────────
+  update-dashboard:
+    name: Update Conflict Dashboard
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Regenerate conflict dashboard
+        run: node scripts/conflict-dashboard.js --since "3 months ago"
+
+      - name: Commit updated dashboard
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/site/conflict-dashboard.html
+          git diff --staged --quiet || \
+            git commit -m "docs: update conflict dashboard [skip ci]"
+          git push

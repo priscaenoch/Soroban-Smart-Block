@@ -10,6 +10,15 @@ const hooks = {
   "pre-commit": `#!/bin/sh
 echo "=== Running pre-commit hooks ==="
 
+# ── Conflict marker check on staged files ─────────────────────────────────────
+echo "Checking staged files for merge conflict markers..."
+node scripts/conflict-check.js staged || {
+  echo ""
+  echo "❌ Merge conflict markers detected in staged files!"
+  echo "   Resolve all conflicts before committing."
+  exit 1
+}
+
 if [ -f Cargo.toml ]; then
   echo "Checking cargo formatting..."
   cargo fmt --manifest-path Cargo.toml --check || { echo "❌ cargo fmt check failed!"; exit 1; }
@@ -65,8 +74,42 @@ npx --no-install commitlint --edit "$1" || {
 echo "✅ Commit message format is valid!"
 `,
 
+  "pre-merge-commit": `#!/bin/sh
+echo "=== Running pre-merge-commit hook ==="
+
+# Block merge if any staged file contains conflict markers
+echo "Scanning all staged files for conflict markers..."
+node scripts/conflict-check.js staged
+
+EXIT_CODE=$?
+if [ $EXIT_CODE -ne 0 ]; then
+  echo ""
+  echo "❌ MERGE BLOCKED: conflict markers or merge artifacts detected."
+  echo "   Resolve all conflicts before completing this merge."
+  echo ""
+  echo "   To auto-resolve safe conflicts (whitespace, imports, versions):"
+  echo "   node scripts/ml-conflict-resolver.js --auto"
+  echo ""
+  echo "   To score conflict complexity:"
+  echo "   node scripts/conflict-complexity-scorer.js"
+  echo ""
+  exit 1
+fi
+
+echo "✅ No conflict markers — merge allowed."
+`,
+
   "post-merge": `#!/bin/sh
 echo "=== Running post-merge hooks ==="
+
+# Check for leftover conflict artifacts after merge
+echo "Checking for residual conflict markers in all tracked files..."
+node scripts/conflict-check.js all
+if [ $? -ne 0 ]; then
+  echo "⚠️  Warning: conflict markers remain in the repository after merge."
+  echo "   Run: node scripts/conflict-check.js all"
+fi
+
 if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep -q 'package-lock.json'; then
   echo "package-lock.json changed. Updating dependencies..."
   if [ -d indexer ]; then

@@ -6,7 +6,18 @@
   "scripts": {
     "setup": "node scripts/setup.js",
     "doctor": "node scripts/doctor.js",
-    "dev": "make dev"
+    "dev": "make dev",
+
+    "conflict:check": "node scripts/conflict-check.js all",
+    "conflict:check-staged": "node scripts/conflict-check.js staged",
+    "conflict:semantic": "node scripts/semantic-conflict-detector.js",
+    "conflict:score": "node scripts/conflict-complexity-scorer.js",
+    "conflict:resolve": "node scripts/ml-conflict-resolver.js --auto",
+    "conflict:resolve-dry": "node scripts/ml-conflict-resolver.js",
+    "conflict:dashboard": "node scripts/conflict-dashboard.js",
+    "conflict:diff": "node scripts/visual-diff.js --base HEAD~1 --head HEAD",
+    "conflict:queue": "node scripts/merge-queue.js --list",
+    "conflict:queue-process": "node scripts/merge-queue.js --process"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",
