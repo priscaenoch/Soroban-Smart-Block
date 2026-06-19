@@ -10,9 +10,11 @@ export default function Nav() {
     e.preventDefault();
     const v = q.trim();
     if (!v) return;
-    // Stellar addresses start with G (56 chars); contract IDs are hex 64 chars
-    if (v.startsWith("G") && v.length === 56) nav(`/wallet/${v}`);
-    else nav(`/contract/${v}`);
+    const params = new URLSearchParams({ q: v });
+    if (v.startsWith("G") && v.length === 56) params.set("kind", "wallet");
+    else if (v.startsWith("M") && v.length === 56) params.set("kind", "wallet");
+    else if (v.startsWith("C") && v.length === 56) params.set("kind", "contract");
+    nav(`/search?${params}`);
     setQ("");
   }
 
@@ -29,6 +31,9 @@ export default function Nav() {
     >
       <Link to="/" style={{ fontWeight: 700, fontSize: 16, whiteSpace: "nowrap" }}>
         ⬡ Soroban Explorer
+      </Link>
+      <Link to="/search" style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}>
+        Search
       </Link>
       <Link to="/xdr" style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}>
         XDR Workbench
@@ -52,7 +57,7 @@ export default function Nav() {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search contract ID or wallet address…"
+          placeholder="Search contracts, events, wallets…"
           style={{ flex: 1 }}
         />
         <button type="submit">Search</button>

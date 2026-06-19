@@ -156,6 +156,39 @@ export interface ContractMeta {
   dependency_advisory?: DependencyAdvisory | null;
 }
 
+export type SearchKind = "contract" | "event" | "wallet";
+
+export interface SearchContract {
+  id: string;
+  name: string;
+  description?: string | null;
+  functions?: { name: string; description?: string }[];
+  event_count: number;
+}
+
+export interface SearchWallet {
+  address: string;
+  event_count: number;
+  first_seen_ledger: number | null;
+  last_seen_ledger: number | null;
+  contracts: string[];
+}
+
+export interface SearchSuggestion {
+  kind: SearchKind;
+  label: string;
+  route: string;
+  meta: Record<string, unknown>;
+}
+
+export interface SearchResponse {
+  query: string;
+  contracts: SearchContract[];
+  events: DecodedEvent[];
+  wallets: SearchWallet[];
+  suggestions: SearchSuggestion[];
+}
+
 export interface BurnAlert {
   contractId: string;
   ledger: number;
@@ -314,6 +347,12 @@ export const api = {
     return get<DecodedEvent[]>(`/events?${q}`);
   },
   event: (seq: number) => get<DecodedEvent>(`/events/${seq}`),
+  search: (q: string, limit = 10) => {
+    const params = new URLSearchParams();
+    params.set("q", q);
+    params.set("limit", String(limit));
+    return get<SearchResponse>(`/search?${params}`);
+  },
   zkCosts: (seq: number) => get<{ calls: ZkHostCall[]; delta: ZkCostDelta | null }>(`/events/${seq}/zk-costs`),
   contract: (id: string) => get<ContractMeta>(`/contracts/${id}`),
   burnAlerts: (contract: string) => get<BurnAlert[]>(`/burn-alerts?contract=${contract}`),

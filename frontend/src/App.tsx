@@ -7,6 +7,7 @@ const Home = lazy(() => import("./pages/Home"));
 const ContractPage = lazy(() => import("./pages/ContractPage"));
 const WalletPage = lazy(() => import("./pages/WalletPage"));
 const EventPage = lazy(() => import("./pages/EventPage"));
+const SearchPage = lazy(() => import("./pages/SearchPage"));
 const XdrInspector = lazy(() => import("./pages/XdrInspector"));
 const RpcMetricsDashboard = lazy(() => import("./pages/RpcMetricsDashboard"));
 const GraphPage = lazy(() => import("./pages/GraphPage"));
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/contract/:id/workspace" element={<DeveloperWorkspace />} />
             <Route path="/wallet/:address" element={<WalletPage />} />
             <Route path="/event/:seq" element={<EventPage />} />
+            <Route path="/search" element={<SearchPage />} />
             <Route path="/xdr" element={<XdrInspector />} />
             <Route path="/rpc-metrics" element={<RpcMetricsDashboard />} />
             <Route path="/graph" element={<GraphPage />} />
